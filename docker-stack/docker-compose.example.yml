@@ -1,0 +1,125 @@
+# LACES_CASES / ShittyShit Docker stack
+# Grounded in: Desktop/dotmd/toolstack.md v2.2 + Strategic Deployment Blueprint (Phase 1 "Railroad Tracks")
+#
+# Tier 0 (Blueprint-locked): n8n (orchestrator/inference gate) - Dolt (versioned SQL) - ChromaDB (vector store)
+# Tier 1 (toolstack Daily/Active): AnythingLLM (workspace hub, MCP, agents) - LiteLLM (unified model proxy)
+#
+# Data lives on the 500GB SSD via bind mounts: D:\Docker\volumes\<service>
+# Shared server rule: Windows AI desktop apps are clients/maintenance tools only.
+# Ollama is the canonical model server in this compose project; its model store is
+# D:\Docker\volumes\ollama. LiteLLM and Open WebUI use the compose-network Ollama.
+# llama.cpp remains native for now because the host has an AMD 780M and the current
+# Docker Desktop GPU path is not proven for that adapter.
+# Open WebUI: chat front-end on :8080, talks to ollama over the compose network.
+
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: shitty-n8n
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5678:5678"
+    environment:
+      - GENERIC_TIMEZONE=America/New_York
+      - N8N_SECURE_COOKIE=false
+      - NODE_OPTIONS=--max-old-space-size=768
+    volumes:
+      - D:/Docker/volumes/n8n:/home/node/.n8n
+    mem_limit: 1024m
+
+  dolt:
+    image: dolthub/dolt-sql-server:latest
+    container_name: shitty-dolt
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3307:3306"
+    command: ["sql-server", "--host", "0.0.0.0", "--port", "3306", "--data-dir", "/var/lib/dolt"]
+    volumes:
+      - D:/Docker/volumes/dolt:/var/lib/dolt
+    mem_limit: 512m
+
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: shitty-chroma
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - D:/Docker/volumes/chroma:/chroma/chroma
+    mem_limit: 512m
+
+  anythingllm:
+    image: mintplexlabs/anythingllm:latest
+    container_name: shitty-anythingllm
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3001:3001"
+    environment:
+      - STORAGE_DIR=/app/server/storage
+    volumes:
+      - D:/Docker/volumes/anythingllm:/app/server/storage
+    mem_limit: 1g
+
+  litellm:
+    image: ghcr.io/berriai/litellm:main-stable
+    container_name: shitty-litellm
+    restart: unless-stopped
+    depends_on:
+      - ollama
+    ports:
+      - "127.0.0.1:4000:4000"
+    volumes:
+      - D:/Docker/volumes/litellm:/app/config
+      - D:/Docker/volumes/litellm/data:/app/data
+    command: ["--config", "/app/config/litellm-config.yaml", "--port", "4000"]
+    mem_limit: 1536m
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: shitty-ollama
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:11434:11434"
+    volumes:
+      - D:/Docker/volumes/ollama:/root/.ollama
+    mem_limit: 2g
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: shitty-openwebui
+    restart: unless-stopped
+    depends_on:
+      - ollama
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - WEBUI_SECRET_KEY=${WEBUI_SECRET_KEY}
+    volumes:
+      - D:/Docker/volumes/open-webui:/app/backend/data
+    mem_limit: 1536m
+
+  # Opt-in Unsloth server. CPU chat/data workflows may start without a GPU;
+  # training/export require a compatible GPU host and must be validated first.
+  unsloth:
+    image: unsloth/unsloth:latest
+    container_name: shitty-unsloth
+    profiles: ["unsloth"]
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8888:8888"
+      - "127.0.0.1:8800:8000"
+    environment:
+      JUPYTER_PORT: "8888"
+      JUPYTER_PASSWORD: ${UNSLOTH_JUPYTER_PASSWORD:-change-me-before-sharing}
+    volumes:
+      - D:/AI/data/Unsloth/work:/workspace/work
+      - D:/AI/data/Unsloth/outputs:/workspace/outputs
+      - D:/AI/data/Unsloth/exports:/workspace/exports
+      - D:/AI/data/Unsloth/runs:/workspace/runs
+      - D:/AI/cache/huggingface:/workspace/.cache/huggingface
+    shm_size: "8gb"
+
+  # Note: LanceDB + DuckDB are EMBEDDED engines (canon law: "Dolt versions, LanceDB retrieves").
+  # No server images; they run as Python stages in the memory chain (scripts/memory_chain.py),
+  # data under D:\SHITTYSHIT\00_MASTER\memory-loop\data.

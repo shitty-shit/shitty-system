@@ -1,0 +1,1955 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>KISS DECK — cube dashboard prototype</title>
+<!-- PWA / Mini Me: installable, offline-first, app-build-ready -->
+<meta name="theme-color" content="#0b0e14">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="KISS Mini Me">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon-192.png">
+<script>
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{}));
+  }
+</script>
+<style>
+  :root{
+    --bg:#0b0e14; --panel:#11161f; --panel2:#161d29; --line:#232c3b;
+    --text:#dfe6f1; --dim:#8a93a3; --faint:#5a6472;
+    --proj:#2dd4bf; --step:#fbbf24; --list:#818cf8; --agent:#c084fc; --note:#94a3b8; --stack:#38bdf8;
+    --ok:#4ade80; --warn:#fbbf24; --bad:#f87171;
+    --t-ai:#c084fc; --t-app:#2dd4bf; --t-workflow:#fbbf24; --t-basic:#94a3b8;
+    --mono:"Cascadia Code","Consolas",monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  /* PRD MVP "minimal" theme: white background, black text */
+  body.minimal{
+    --bg:#ffffff; --panel:#ffffff; --panel2:#f2f4f7; --line:#d7dbe2;
+    --text:#111111; --dim:#4b5563; --faint:#9aa2ad;
+  }
+  body.minimal #canvas{
+    background-image:radial-gradient(circle, rgba(0,0,0,.07) 1px, transparent 1px);
+  }
+  body.minimal .cube{box-shadow:0 2px 8px rgba(0,0,0,.08);}
+  body.minimal .cube-head{background:#fafbfc;}
+  body.minimal .tab{background:#ffffff;}
+  body.minimal .tab.active{background:#f2f4f7;}
+  .hidden{display:none !important;}
+  .edit-inp{
+    flex:1 1 auto; min-width:0; background:var(--panel2); color:var(--text);
+    border:1px solid #3d4a60; border-radius:5px; padding:2px 6px; font-size:12.5px;
+    font-weight:600; font-family:inherit; outline:none;
+  }
+  .menu-head{
+    font-size:9.5px; font-family:var(--mono); letter-spacing:1px; text-transform:uppercase;
+    color:var(--faint); padding:4px 8px 2px;
+  }
+  html,body{height:100%;}
+  body{
+    background:var(--bg); color:var(--text);
+    font:13px/1.45 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    overflow:hidden; display:flex; flex-direction:column;
+  }
+  /* ---------- toolbar ---------- */
+  #toolbar{
+    display:flex; align-items:center; gap:14px; padding:8px 14px;
+    border-bottom:1px solid var(--line); background:var(--panel);
+    flex:0 0 auto; flex-wrap:wrap;
+  }
+  .brand{font-weight:700; letter-spacing:.5px; font-size:14px;}
+  .brand .sub{color:var(--faint); font-weight:400; font-size:11px; margin-left:8px; letter-spacing:0;}
+  .presets{display:flex; gap:6px;}
+  .presets button, #btn-reset{
+    background:var(--panel2); color:var(--dim); border:1px solid var(--line);
+    border-radius:6px; padding:4px 10px; font-size:12px; cursor:pointer;
+  }
+  .presets button:hover, #btn-reset:hover{color:var(--text); border-color:#38455c;}
+  .presets button.active{background:#1c2f33; color:var(--proj); border-color:#2a5a5c;}
+  #btn-reset{color:var(--bad);}
+  #btn-reset:hover{border-color:#6b3a3a; color:#fca5a5;}
+  #save-state{color:var(--faint); font-size:11px; font-family:var(--mono);}
+  #save-state.ok{color:var(--ok);}
+  .hint{color:var(--faint); font-size:11px; margin-left:auto; max-width:52%; text-align:right;}
+  .hint .k-next{color:var(--step);}
+  .hint b{color:var(--dim); font-weight:600;}
+  /* ---------- canvas ---------- */
+  #canvas{
+    flex:1 1 auto; position:relative; overflow:hidden;
+    background:radial-gradient(circle, rgba(255,255,255,.05) 1px, transparent 1px);
+    background-size:26px 26px;
+  }
+  /* ---------- cubes ---------- */
+  .cube{
+    position:absolute; border-radius:10px; border:1px solid var(--line);
+    background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(0,0,0,.15)), var(--panel);
+    box-shadow:0 6px 18px rgba(0,0,0,.35); overflow:hidden;
+    display:flex; flex-direction:column; user-select:none;
+  }
+  .cube.dragging{opacity:.92; box-shadow:0 14px 34px rgba(0,0,0,.5);}
+  .cube-head{
+    flex:0 0 auto; display:flex; align-items:center; gap:8px;
+    padding:6px 8px 6px 10px; cursor:grab; border-bottom:1px solid transparent;
+    background:var(--panel2); min-height:30px;
+  }
+  .cube.kind-project .cube-head{border-bottom-color:rgba(45,212,191,.35);}
+  .cube.kind-nextstep .cube-head{border-bottom-color:rgba(251,191,36,.35);}
+  .cube.kind-list .cube-head{border-bottom-color:rgba(129,140,248,.35);}
+  .cube.kind-agent .cube-head{border-bottom-color:rgba(192,132,252,.35);}
+  .cube.kind-note .cube-head{border-bottom-color:rgba(148,163,184,.35);}
+  .cube.kind-stack .cube-head{border-bottom-color:rgba(56,189,248,.35);}
+  .cube-head:active{cursor:grabbing;}
+  .cube.kind-nextstep{border-style:dashed; border-color:#4a4030;}
+  .kind-dot{width:8px; height:8px; border-radius:50%; flex:0 0 auto;}
+  .kind-project .kind-dot{background:var(--proj);} .kind-nextstep .kind-dot{background:var(--step);}
+  .kind-list .kind-dot{background:var(--list);} .kind-agent .kind-dot{background:var(--agent);}
+  .kind-note .kind-dot{background:var(--note);} .kind-stack .kind-dot{background:var(--stack);}
+  .kind-critique .kind-dot{background:var(--agent);}
+  .cube-title{
+    flex:1 1 auto; font-weight:600; font-size:12.5px; white-space:nowrap;
+    overflow:hidden; text-overflow:ellipsis; min-width:0;
+  }
+  .cube-title .small{font-weight:400; color:var(--faint); font-size:10.5px; margin-left:6px;}
+  .chev{background:none; border:none; color:var(--dim); cursor:pointer; font-size:10px; padding:2px 4px; border-radius:4px;}
+  .chev:hover{background:var(--line); color:var(--text);}
+  .chip{
+    font-size:10px; font-family:var(--mono); padding:1px 7px; border-radius:99px;
+    border:1px solid var(--line); color:var(--dim); cursor:pointer; white-space:nowrap;
+    background:var(--panel2);
+  }
+  .chip:hover{color:var(--text); border-color:#3d4a60;}
+  .chip.on{color:var(--ok); border-color:#245c38; background:#10241a;}
+  .cube-body{flex:1 1 auto; overflow:auto; padding:8px 10px; font-size:12px;}
+  .cube.collapsed .cube-body{display:none;}
+  .cube-resize{
+    position:absolute; right:0; bottom:0; width:16px; height:16px; cursor:nwse-resize;
+  }
+  .cube-resize::after{
+    content:""; position:absolute; right:4px; bottom:4px; width:8px; height:8px;
+    border-right:2px solid var(--faint); border-bottom:2px solid var(--faint); border-radius:0 0 4px 0;
+  }
+  /* project cube internals */
+  .pr-tags{display:flex; flex-wrap:wrap; gap:4px; margin-bottom:6px;}
+  .pr-lane{font-size:10px; font-family:var(--mono); padding:1px 6px; border-radius:4px;}
+  .pr-status{color:var(--dim); font-size:11px; margin-bottom:8px;}
+  .sprite-list{display:flex; flex-direction:column; gap:5px;}
+  .sprite-item{
+    display:flex; align-items:center; gap:6px; background:var(--panel2);
+    border:1px solid var(--line); border-left:3px solid var(--step); border-radius:6px;
+    padding:4px 6px; font-size:11px; color:var(--text); cursor:default;
+  }
+  .sprite-item .grab{
+    cursor:grab; color:var(--faint); font-size:12px; flex:0 0 auto; padding:0 2px;
+  }
+  .sprite-item .grab:active{cursor:grabbing; color:var(--step);}
+  .sprite-item .txt{flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .lane-chip{font-size:9.5px; font-family:var(--mono); padding:0 5px; border-radius:4px; flex:0 0 auto;}
+  /* list cube */
+  .list-hint{color:var(--faint); font-size:11px; margin-bottom:6px;}
+  .list-row{
+    display:flex; align-items:center; gap:6px; background:var(--panel2);
+    border:1px solid var(--line); border-radius:6px; padding:4px 6px; margin-bottom:5px; font-size:11.5px;
+  }
+  .list-row .txt{flex:1 1 auto; min-width:0;}
+  .list-row .proj{font-family:var(--mono); font-size:10px; color:var(--faint); flex:0 0 auto;}
+  .icon-btn{
+    background:none; border:none; color:var(--dim); cursor:pointer; font-size:12px; padding:1px 4px; border-radius:4px;
+  }
+  .icon-btn:hover{background:var(--line); color:var(--text);}
+  .list-empty{color:var(--faint); border:1px dashed var(--line); border-radius:8px; padding:14px 10px; text-align:center; font-size:11.5px;}
+  /* agent cube */
+  .ag-status{display:flex; align-items:center; gap:6px; margin-bottom:6px; font-size:11.5px; color:var(--dim);}
+  .ag-dot{width:8px; height:8px; border-radius:50%;}
+  .ag-dot.active{background:var(--ok); box-shadow:0 0 6px var(--ok);}
+  .ag-dot.unknown{background:#5a6472;}
+  .ag-dot.needs-key{background:var(--warn);}
+  .ag-dot.off{background:var(--bad);}
+  .ag-chat{font-size:11.5px; color:var(--dim); margin-bottom:8px; word-break:break-word;}
+  .ag-chat b{color:var(--text); font-weight:600;}
+  .ag-toggles{display:flex; gap:4px; margin-bottom:8px; flex-wrap:wrap;}
+  .ag-queue{margin-top:2px;}
+  .ag-queue input{
+    width:100%; background:var(--panel2); border:1px solid var(--line); color:var(--text);
+    border-radius:6px; padding:5px 8px; font-size:11.5px; outline:none;
+  }
+  .ag-queue input:focus{border-color:#6d5a8a;}
+  /* writer plate (STFU+WRITE) */
+  .write-ta{
+    flex:1 1 auto; width:100%; min-height:0; resize:none; outline:none;
+    background:transparent; border:none; color:var(--text);
+    font:14px/1.75 var(--mono); padding:8px 14px 22px 14px; letter-spacing:.01em;
+  }
+  .write-bar{
+    flex:0 0 auto; display:flex; align-items:center; gap:8px;
+    padding:4px 10px; border-top:1px solid var(--line); font-size:10.5px; color:var(--faint);
+  }
+  .write-count{margin-right:auto; font-family:var(--mono);}
+  #modes{display:flex; gap:4px;}
+  #modes button{
+    background:var(--panel2); color:var(--faint); border:1px solid var(--line);
+    border-radius:6px; padding:3px 9px; font-size:10.5px; cursor:pointer; font-family:var(--mono);
+  }
+  #modes button:hover{color:var(--text); border-color:#3d4a60;}
+  #modes button.active{color:var(--step); border-color:#6b5a22; background:#1e1a10;}
+  .q-item{
+    display:flex; align-items:center; gap:6px; background:var(--panel2);
+    border:1px solid var(--line); border-left:3px solid var(--agent); border-radius:6px;
+    padding:4px 6px; margin-top:5px; font-size:11px;
+  }
+  .q-item .txt{flex:1 1 auto; min-width:0;}
+  .q-item .unsent{font-size:9px; font-family:var(--mono); color:var(--warn); border:1px solid #5c4a22; border-radius:4px; padding:0 4px; flex:0 0 auto;}
+  .q-item .sent{font-size:9px; font-family:var(--mono); color:var(--ok); border:1px solid #245c38; border-radius:4px; padding:0 4px; flex:0 0 auto;}
+  /* stack */
+  .stack-tabs{display:flex; gap:4px; padding:5px 8px 0; flex:0 0 auto; background:var(--panel2);}
+  .tab{
+    font-size:11px; padding:3px 9px; border-radius:6px 6px 0 0; border:1px solid var(--line);
+    border-bottom:none; color:var(--dim); cursor:pointer; display:flex; align-items:center; gap:5px;
+    background:var(--panel); max-width:160px;
+  }
+  .tab.active{color:var(--text); background:var(--panel2); border-color:#3d4a60;}
+  .tab .t{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .tab .x{color:var(--faint);}
+  .tab .x:hover{color:var(--bad);}
+  .stack-body{flex:1 1 auto; overflow:auto; padding:8px 10px;}
+  /* note */
+  .note-body{font-size:11.5px; color:var(--dim); line-height:1.55;}
+  .note-body b{color:var(--text);}
+  .note-body code{font-family:var(--mono); font-size:10.5px; color:var(--step);}
+  .note-body .sw{color:var(--proj);} .note-body .sw2{color:var(--agent);} .note-body .sw3{color:var(--list);}
+  /* critique cube (writer phase 4) */
+  .crit-row{display:flex; align-items:center; gap:6px; font-size:11px; color:var(--dim); margin:2px 0;}
+  .crit-row select{background:var(--panel2); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:3px 6px; font-size:11px; outline:none; max-width:130px;}
+  .crit-checks{display:flex; flex-direction:column; gap:3px; margin:6px 0; font-size:11px; color:var(--dim);}
+  .crit-task{display:flex; align-items:center; gap:6px; cursor:pointer;}
+  .crit-task input{accent-color:var(--agent); margin:0;}
+  /* behavior menu */
+  .beh-menu{
+    position:fixed; z-index:99999; background:var(--panel2); border:1px solid #3d4a60;
+    border-radius:8px; padding:4px; min-width:190px; box-shadow:0 10px 30px rgba(0,0,0,.5);
+  }
+  .beh-menu .opt{
+    display:block; width:100%; text-align:left; background:none; border:none; color:var(--dim);
+    font-size:11.5px; padding:6px 8px; border-radius:6px; cursor:pointer;
+  }
+  .beh-menu .opt:hover{background:var(--line); color:var(--text);}
+  .beh-menu .opt.sel{color:var(--proj);}
+  .beh-menu .opt.danger{color:var(--bad);}
+  .beh-menu .opt.danger:hover{background:#3a1d1d; color:#fca5a5;}
+  /* live machine-sections tracer */
+  #tracer{
+    position:fixed; right:14px; bottom:14px; z-index:60;
+    background:var(--panel2); border:1px solid var(--line); border-radius:10px;
+    padding:6px 10px; font-family:var(--mono); font-size:9.5px;
+    pointer-events:none; min-width:0; box-shadow:0 6px 24px rgba(0,0,0,.35);
+  }
+  body.minimal #tracer{box-shadow:0 2px 10px rgba(0,0,0,.10);}
+  #tracer .t-head{display:flex; justify-content:space-between; align-items:center; color:var(--faint); letter-spacing:1.5px; margin-bottom:4px;}
+  #tracer .t-x{pointer-events:auto; cursor:pointer; padding:0 4px; font-size:10px;}
+  #tracer .t-x:hover{color:var(--text);}
+  #tracer .t-diagram{display:block; margin-top:3px;}
+  #tracer svg{display:block;}
+  #tracer svg text{font-family:var(--mono); font-size:8.5px;}
+  #tracer svg .flow{stroke:var(--faint); fill:none; stroke-width:1.2;}
+  #tracer svg marker#ta path{fill:var(--faint);}
+  #tracer svg g.node rect{fill:var(--panel); stroke:var(--line); stroke-width:1; rx:5; transition:stroke .15s ease, fill .15s ease;}
+  #tracer svg g.node text{fill:var(--dim);}
+  #tracer svg g.node.lit rect{stroke-width:1.6;}
+  #tracer svg g.node.lit text{fill:var(--text);}
+  #tracer svg g.node[data-s="user"].lit rect{stroke:#9aa7ad; fill:rgba(154,167,173,.14);}
+  #tracer svg g.node[data-s="ui"].lit rect{stroke:#38bdf8; fill:rgba(56,189,248,.14);}
+  #tracer svg g.node[data-s="state"].lit rect{stroke:#60a5fa; fill:rgba(96,165,250,.14);}
+  #tracer svg g.node[data-s="persist"].lit rect{stroke:#fbbf24; fill:rgba(251,191,36,.16);}
+  #tracer svg g.node[data-s="share"].lit rect{stroke:#c084fc; fill:rgba(192,132,252,.14);}
+  #tracer svg g.node[data-s="agent"].lit rect{stroke:#4ade80; fill:rgba(74,222,128,.14);}
+  #tracer svg text.hint{font-size:7px; fill:#889; font-style:italic;}
+  #tracer .t-log{color:var(--faint); margin-top:4px; min-height:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:336px;}
+  #tracer .t-log.flash{color:var(--text);}
+  #tracer.min .t-diagram, #tracer.min .t-log{display:none;}
+  #tracer.min{min-width:0; padding:3px 8px;}
+  #tracer .t-restore{display:none;}
+  #tracer.min .t-restore{display:inline; pointer-events:auto; cursor:pointer;}
+  /* inspector */
+  #inspector{
+    position:fixed; top:0; right:0; bottom:0; width:330px; z-index:50;
+    background:var(--panel); border-left:1px solid var(--line); padding:14px;
+    overflow:auto; transform:translateX(0); transition:transform .18s ease;
+  }
+  #inspector.hidden{transform:translateX(105%);}
+  #inspector h2{font-size:14px; margin-bottom:4px; padding-right:24px;}
+  #inspector .sub{color:var(--faint); font-family:var(--mono); font-size:10.5px; margin-bottom:10px;}
+  #inspector .sec{font-size:10px; font-family:var(--mono); color:var(--faint); letter-spacing:1px; text-transform:uppercase; margin:14px 0 5px;}
+  #inspector .val{color:var(--text); font-size:12px; line-height:1.5;}
+  #inspector .val.dim{color:var(--dim);}
+  #inspector a{color:var(--proj); text-decoration:none;}
+  #inspector a:hover{text-decoration:underline;}
+  #insp-close{position:absolute; top:10px; right:10px; background:none; border:none; color:var(--dim); font-size:15px; cursor:pointer;}
+  #insp-close:hover{color:var(--text);}
+  .insp-chips{display:flex; flex-wrap:wrap; gap:4px; margin-top:6px;}
+  .insp-chips .lane-chip{font-size:10px; padding:2px 7px;}
+  .insp-list{margin:0; padding-left:16px; color:var(--dim); font-size:11.5px;}
+  .insp-list li{margin-bottom:3px;}
+  .insp-btn{
+    display:inline-block; margin-top:8px; background:var(--panel2); border:1px solid var(--line);
+    color:var(--text); border-radius:6px; padding:4px 10px; font-size:11.5px; cursor:pointer; text-decoration:none;
+  }
+  .insp-btn:hover{border-color:#3d4a60;}
+  /* toasts */
+  #toasts{position:fixed; left:14px; bottom:14px; z-index:100; display:flex; flex-direction:column; gap:6px;}
+  .toast{
+    background:var(--panel2); border:1px solid #3d4a60; border-left:3px solid var(--proj);
+    border-radius:8px; padding:7px 12px; font-size:11.5px; box-shadow:0 8px 24px rgba(0,0,0,.4);
+    animation:fadein .15s ease;
+  }
+  .toast.out{opacity:0; transition:opacity .4s;}
+  @keyframes fadein{from{opacity:0; transform:translateY(6px);} to{opacity:1;}}
+  .flag{position:absolute; top:-7px; right:-7px; background:#7a1f1f; color:#ffb3b3; font-size:10px;
+        border:1px solid #b35656; border-radius:99px; padding:1px 7px; z-index:5;}
+  /* ---- touch / mobile (Mini Me) ---- */
+  html{ -webkit-text-size-adjust:100%; }
+  .cube{ -webkit-touch-callout:none; -webkit-user-select:none; }
+  .cube-head, .cube-resize, .sprite-item .grab, .stack-tabs, .beh-menu .opt{ touch-action:none; }
+  #canvas{ overscroll-behavior:none; }
+  @media (max-width:820px){
+    body{ font-size:14px; }
+    #toolbar{ gap:6px; padding:6px 8px; }
+    .brand{ font-size:13px; }
+    .brand .sub{ display:none; }
+    .hint{ display:none; }
+    .presets{ gap:4px; }
+    .presets button, #btn-reset, #btn-add, #btn-theme, #btn-hist, #btn-commit{
+      padding:6px 10px; font-size:13px; border-radius:8px;
+    }
+    #canvas{ overflow:auto; -webkit-overflow-scrolling:touch; }
+    .cube-head{ min-height:40px; padding:8px 10px; }
+    .cube-title{ font-size:14px; }
+    .chev{ font-size:13px; padding:4px 8px; }
+    .chip{ font-size:11px; padding:3px 9px; }
+    .icon-btn{ font-size:15px; padding:4px 8px; }
+    .cube-resize{ width:28px; height:28px; }
+    .cube-resize::after{ right:8px; bottom:8px; width:12px; height:12px; }
+    .cube-body{ padding:10px 12px; font-size:13px; }
+    .ag-queue input{ font-size:13px; padding:8px 10px; }
+    .beh-menu{ min-width:220px; }
+    .beh-menu .opt{ font-size:14px; padding:10px 12px; }
+    #inspector{ width:100%; max-width:420px; }
+    #tracer{ right:8px; bottom:8px; }
+    #toasts{ left:8px; bottom:8px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="toolbar">
+  <div class="brand">KISS DECK <span class="sub">Fake-KISS cube prototype · sprite model</span></div>
+  <div class="presets">
+    <button data-preset="focus">Focus</button>
+    <button data-preset="agents">Coders</button>
+    <button data-preset="writer">Writer</button>
+    <button data-preset="full">Full deck</button>
+  </div>
+  <div id="modes" class="hidden">
+    <button data-mode="FLOW">FLOW</button>
+    <button data-mode="FREEWRITE">FREEWRITE</button>
+    <button data-mode="EDIT">EDIT</button>
+    <button data-mode="REFERENCE">REFERENCE</button>
+    <button data-mode="OUTPUT">OUTPUT</button>
+  </div>
+  <button id="btn-add">＋ cube</button>
+  <button id="btn-reset">Reset layout</button>
+  <button id="btn-theme">Theme</button>
+  <div style="position:relative"><button id="btn-hist">History ▾</button>
+    <div id="hist-menu" class="beh-menu hidden"></div></div>
+  <button id="btn-commit">Commit ▾</button>
+  <span id="bridge-state" class="chip" title="click to re-check the inbox bridge">inbox: …</span>
+  <div id="save-state">—</div>
+  <div class="hint">
+    <b>drag</b> = move (snaps to grid) · <b>corner</b> = resize · <b>dbl-click title</b> = rename ·
+    <b>right-click</b> = make this cube a… · drop a <span class="k-next">next-step sprite</span> on
+    the master list to join it · every cube is a <b>sprite</b> — its ⚡ behavior chip is reassignable
+  </div>
+</div>
+
+<div id="canvas"></div>
+
+<div id="inspector" class="hidden">
+  <button id="insp-close">✕</button>
+  <div id="insp-body"></div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+const KISS_DATA = __KISS_DATA__;
+/* =====================================================================
+   KISS DECK — cube / sprite engine (prototype)
+   ===================================================================== */
+const $ = s => document.querySelector(s);
+const cv = $('#canvas');
+const LS = 'kiss.deck.v1';
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g,
+  m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+/* PRD Phase 1 MVP grid: cubes snap to a cell grid; sizes are 1x1 / 2x1 / 2x2 */
+const CELL = 124, GAP = 14, PAD = 14;
+const TYPE_COLORS = { basic:'var(--t-basic)', ai:'var(--t-ai)', app:'var(--t-app)', workflow:'var(--t-workflow)' };
+const TYPE_BY_KIND = { project:'app', nextstep:'workflow', list:'basic', agent:'ai', note:'basic', stack:'basic', link:'app', write:'workflow', drafts:'app', critique:'ai' };
+const TYPE_NAMES = { basic:'basic', ai:'ai', app:'app', workflow:'workflow' };
+
+const KIND_COLOR = { project:'var(--proj)', nextstep:'var(--step)', list:'var(--list)',
+                     agent:'var(--agent)', note:'var(--note)', stack:'var(--stack)' };
+const LANE_COLORS = {
+  ACTIVE:'#4ade80', MUDROOM:'#fbbf24', WORKING:'#2dd4bf', SYSTEM:'#60a5fa',
+  INTAKE:'#c084fc', REGISTERED:'#a5b4fc', PARKED:'#8a93a3'
+};
+const BEHAVIORS = {
+  project:[['sprite-source','⚡ items drag out as sprites'],['inspect','🖱 click → inspector'],['link','🔗 click → open project page']],
+  nextstep:[['join','⚡ drop on a list → joins it'],['pin','📌 float freely'],['flag','🚩 flag it']],
+  list:[['aggregate','⚡ collects dropped sprites'],['sort','📶 auto-sort by priority']],
+  agent:[['queue','⚡ assign tasks'],['status','📡 status + last chat'],['watch','👁 watch project lanes']],
+  note:[['sticky','📝 just a note'],['pin','📌 pin it']],
+  write:[['quiet','✍️ silent surface — AI only when summoned'],['flow','🌀 FLOW: type, nothing else']],
+  critique:[['critique','🎓 critique the draft'],['review','🧐 structure + key phrases']],
+  drafts:[['manage','🗂 drafts manager'],['browse','📚 browse + open drafts']],
+  link:[['open','🔗 click → open URL'],['copy','⧉ click → copy URL']],
+  stack:[['tabs','🗂 tabs of stacked cubes']],
+};
+const defaultBehavior = k => ({project:'sprite-source', nextstep:'join', list:'aggregate',
+                                agent:'queue', note:'sticky', critique:'critique', stack:'tabs'}[k] || 'pin');
+
+const AGENTS = KISS_DATA.agents || [];
+const PROJECTS = KISS_DATA.projects || [];
+const LINKS = KISS_DATA.links || [];
+const rankProj = p => {
+  const lane = String(p.lane||'').toUpperCase();
+  const laneScore = lane==='ACTIVE'?0 : lane==='MUDROOM'?1 : lane==='WORKING'?2 : 3;
+  const pri = laneScore*10 + (p.priority==='1'?0 : p.priority==='2'?1 : p.priority==='3'?2 : 3);
+  return pri - (p.revenue ? 0.5 : 0);
+};
+const topProjects = n => [...PROJECTS].sort((a,b)=>rankProj(a)-rankProj(b)).slice(0,n);
+const byFolder = f => PROJECTS.find(p => p.folder === f);
+
+/* ---------------- live machine-sections tracer ----------------
+   Renders an inline mini machine-sections diagram (USER→UI→STATE→PERSIST,
+   branching to SHARE/AGENT) and lights the station a piece of data is in
+   right now, as it happens. USER/UI on drag, STATE on deck mutations,
+   PERSIST on debounced save, SHARE on deck commit, AGENT on inbox brief
+   traffic. */
+const TRAILER = (function(){
+  const NODES = [
+    ['user','USER',6,8], ['ui','UI',96,8], ['state','STATE',186,8],
+    ['persist','PERSIST',276,8], ['share','SHARE',186,52], ['agent','AGENT',276,52],
+  ];
+  const FLOW = [
+    'M68 21 L96 21', 'M158 21 L186 21', 'M248 21 L276 21',
+    'M307 34 L307 44 L217 44 L217 52', 'M307 34 L307 52',
+  ];
+  function diagram(){
+    const nodes = NODES.map(n =>
+      '<g class="node" data-s="'+n[0]+'">' +
+        '<rect x="'+n[2]+'" y="'+n[3]+'" width="62" height="26"/>' +
+        '<text x="'+(n[2]+31)+'" y="'+(n[3]+17)+'" text-anchor="middle">'+n[1]+'</text>' +
+      '</g>'
+    ).join('');
+    const flow = FLOW.map(d => '<path class="flow" d="'+d+'" marker-end="url(#ta)"/>').join('');
+    return '<div class="t-diagram"><svg width="340" height="86" viewBox="0 0 348 86" aria-hidden="true">' +
+      '<defs><marker id="ta" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z"/></marker></defs>' +
+      flow +
+      '<text class="hint" x="262" y="40" text-anchor="end">commit deck</text>' +
+      '<text class="hint" x="314" y="40">brief</text>' +
+      nodes +
+    '</svg></div>';
+  }
+  let root, logEl, contentEl = null, collapsed = false, time = {};
+  try{ collapsed = localStorage.getItem('kiss.tracer') === '1'; }catch(e){}
+  function build(){
+    root = document.createElement('div');
+    root.id = 'tracer';
+    if (collapsed) root.classList.add('min');
+    const x = collapsed
+      ? '<span class="t-restore" data-tx title="show data flow">DATA FLOW ▸</span>'
+      : '<span class="t-x" data-tx title="collapse">✕</span>';
+    root.innerHTML =
+      '<div class="t-head"><span>DATA FLOW</span>' + x + '</div>' +
+      diagram() +
+      '<div class="t-log">tracer armed — drag a cube</div>';
+    document.body.appendChild(root);
+    const tx = root.querySelector('[data-tx]');
+    if (tx) tx.addEventListener('click', e => { e.stopPropagation(); toggle(); });
+    contentEl = root.querySelector('.t-log');
+  }
+  function toggle(){
+    collapsed = !collapsed;
+    root.classList.toggle('min', collapsed);
+    try{ localStorage.setItem('kiss.tracer', collapsed ? '1' : '0'); }catch(e){}
+    const headEl = root.querySelector('.t-head');
+    headEl.innerHTML = collapsed
+      ? '<span>DATA FLOW</span><span class="t-restore" data-tx title="show data flow">▸</span>'
+      : '<span>DATA FLOW</span><span class="t-x" data-tx title="collapse">✕</span>';
+    root.querySelector('[data-tx]').addEventListener('click', e => { e.stopPropagation(); toggle(); });
+  }
+  function fire(id, msg, keep){
+    const st = root && root.querySelector('[data-s="'+id+'"]');
+    if (st){
+      st.classList.add('lit');
+      clearTimeout(time[id]);
+      if (!keep) time[id] = setTimeout(() => st.classList.remove('lit'), 750);
+    }
+    if (msg && contentEl){
+      contentEl.textContent = '▸ ' + msg;
+      contentEl.classList.add('flash');
+      clearTimeout(time._log);
+      time._log = setTimeout(() => contentEl.classList.remove('flash'), 2000);
+    }
+  }
+  function hold(id, on){
+    const st = root && root.querySelector('[data-s="'+id+'"]');
+    if (!st) return;
+    if (on){ st.classList.add('lit'); clearTimeout(time[id]); }
+    else st.classList.remove('lit');
+  }
+  return { build, fire, hold };
+})();
+
+/* ---------------- deck state ---------------- */
+let deck = { preset:'focus', seq:1, z:30, order:[], cubes:{} };
+let saveTimer = null;
+
+function newId(kind){ return kind + '-' + (deck.seq++); }
+
+function makeCube(kind, x, y, w, h, data, extra){
+  return Object.assign({
+    id:newId(kind), kind, x, y, w, h, collapsed:false,
+    type:TYPE_BY_KIND[kind] || 'basic', label:null,
+    behavior:defaultBehavior(kind), cfg:{showStatus:true, showChat:true, showQueue:true},
+    children:[], activeChild:null, inside:null, queue:[], items:[], data:data||{}
+  }, extra||{});
+}
+
+function gridPos(col,row,cols,rows){
+  return { x:PAD+col*(CELL+GAP), y:PAD+row*(CELL+GAP),
+           w:cols*CELL+(cols-1)*GAP, h:rows*CELL+(rows-1)*GAP };
+}
+function snapX(x){ return PAD + Math.round((x-PAD)/(CELL+GAP))*(CELL+GAP); }
+function snapY(y){ return PAD + Math.round((y-PAD)/(CELL+GAP))*(CELL+GAP); }
+function snapW(w){ const c = Math.max(1, Math.round((w+GAP)/(CELL+GAP))); return c*CELL+(c-1)*GAP; }
+function snapH(h){ const r = Math.max(1, Math.round((h+GAP)/(CELL+GAP))); return r*CELL+(r-1)*GAP; }
+function sizePreset(cols,rows){ return { w:cols*CELL+(cols-1)*GAP, h:rows*CELL+(rows-1)*GAP }; }
+const titleOf = c => c.label || (c.data && (c.data.title || c.data.name || c.data.text)) || c.kind;
+
+/* ---------------- presets ---------------- */
+function buildPreset(name){
+  const cubes = {}; const order = [];
+  const add = c => { cubes[c.id] = c; order.push(c.id); return c; };
+
+  if (name === 'agents'){
+    AGENTS.forEach((a,i) => {
+      const p = gridPos(i, 0, 2, 2);
+      add(makeCube('agent', p.x, p.y, p.w, p.h, a));
+    });
+  } else if (name === 'focus'){
+    const list = gridPos(0,0,3,2);
+    add(makeCube('list', list.x, list.y, list.w, list.h, {title:'MASTER NEXT STEPS',
+      hint:'drag next-step sprites here from any project cube — they join the master list'}));
+    const note = gridPos(3,0,2,1);
+    add(makeCube('note', note.x, note.y, note.w, note.h, {title:'SPRITE MODEL',
+      text:'Every cube is a <b>sprite</b>: a block with a behavior. Drag the <span class="sw3">amber</span> next-step rows out of a project cube and drop them on <span class="sw3">MASTER NEXT STEPS</span>. Reassign any cube\'s <span class="sw2">⚡ behavior chip</span>, <b>right-click</b> to make it a different type, <b>dbl-click its title</b> to rename, and stack cubes by dropping one on another.'}));
+    topProjects(3).forEach((p,i) => {
+      const gp = gridPos(i,1,2,2);
+      add(makeCube('project', gp.x, gp.y, gp.w, gp.h, p));
+    });
+    const seed = topProjects(1)[0];
+    if (seed && seed.nextItems && seed.nextItems[0]){
+      const sp = gridPos(3,1,2,1);
+      add(makeCube('nextstep', sp.x, sp.y, sp.w, sp.h,
+        {text:seed.nextItems[0], project:seed.title, folder:seed.folder, pageHref:seed.pageHref}));
+    }
+  } else if (name === 'full'){
+    // full deck
+    AGENTS.forEach((a,i) => {
+      const p = gridPos(i, 0, 2, 2);
+      add(makeCube('agent', p.x, p.y, p.w, p.h, a));
+    });
+    const list = gridPos(0, 1, 3, 2);
+    add(makeCube('list', list.x, list.y, list.w, list.h, {title:'MASTER NEXT STEPS',
+      hint:'drag next-step sprites here from any project cube — they join the master list'}));
+    const note = gridPos(3, 1, 2, 1);
+    add(makeCube('note', note.x, note.y, note.w, note.h, {title:'SPRITE MODEL',
+      text:'Cubes are <b>sprites</b> with behaviors. Drag <span class="sw3">amber</span> next-step rows out of project cubes; drop them on <span class="sw3">MASTER NEXT STEPS</span>. Assign tasks to agent cubes below. Stack cubes by dropping one onto another.'}));
+    topProjects(12).forEach((p,i) => {
+      const col = i % 4, row = 2 + Math.floor(i/4);
+      const gp = gridPos(col, row, 2, 2);
+      add(makeCube('project', gp.x, gp.y, gp.w, gp.h, p));
+    });
+    LINKS.slice(0, 6).forEach((l,i) => {
+      const gp = gridPos(i, 4, 2, 1);
+      add(makeCube('link', gp.x, gp.y, gp.w, gp.h, {title:l.title, url:l.url, desc:l.desc||''}));
+    });
+  }
+  if (name === 'writer'){
+    /* STFU+WRITE Phase 2 — Writer Without AI: the six functional cubes */
+    const w = gridPos(0, 0, 4, 4);
+    add(makeCube('write', w.x, w.y, w.w, w.h, {title:'draft', draft:'', dirty:false}));
+    const p = gridPos(4, 0, 2, 2);
+    add(makeCube('drafts', p.x, p.y, p.w, p.h, {title:'PROJECT', drafts:[]}));
+    const s0 = gridPos(6, 0, 2, 1);
+    add(makeCube('note', s0.x, s0.y, s0.w, s0.h, {title:'SOURCE', text:'Research, character sheets, outlines. Phase 5 (STEM-Lite context) — the links feed is your research for now.'}));
+    const v1 = gridPos(6, 1, 2, 1);
+    add(makeCube('note', v1.x, v1.y, v1.w, v1.h, {title:'VOICE', text:'Style guide, tone, dictation preferences. Phase 5. Hidden until summoned.'}));
+    const e2 = gridPos(6, 2, 2, 1);
+    add(makeCube('critique', e2.x, e2.y, e2.w, e2.h, {title:'EDIT · CRITIQUE',
+      agent:(AGENTS[0]||{}).id || 'codex', tasks:{summarize:true, structure:false, keyphrases:false}, critiques:[]}));
+    const o3 = gridPos(6, 3, 2, 1);
+    add(makeCube('note', o3.x, o3.y, o3.w, o3.h, {title:'OUTPUT', text:'Export: Ctrl+E or the 💾 bar → drafts/export/ as .md + .txt. Formatting stays hidden until now.'}));
+  }
+  return {cubes, order, preset:name};
+}
+
+/* ---------------- writer modes (sonar faceplate remapping) ---------------- */
+const WRITER_MODES = ['FLOW', 'FREEWRITE', 'EDIT', 'REFERENCE', 'OUTPUT'];
+function applyWriterMode(mode){
+  const w = findWriteCube();
+  const p = Object.values(deck.cubes).find(c => c.kind === 'drafts');
+  const notes = Object.values(deck.cubes).filter(c => c.kind === 'note' || c.kind === 'critique');
+  const place = (c, col,row,cols,rows, collapsed) => {
+    if (!c) return;
+    const g = gridPos(col, row, cols, rows);
+    c.x = g.x; c.y = g.y; c.w = g.w; c.h = g.h;
+    c.collapsed = !!collapsed;
+  };
+  notes.forEach(n => place(n, 6, notes.indexOf(n), 2, 1, mode === 'FLOW' || mode === 'FREEWRITE'));
+  if (mode === 'FREEWRITE'){
+    place(w, 0, 0, 7, 5, false);
+    place(p, 0, 5, 3, 1, false);
+  } else if (mode === 'EDIT'){
+    place(w, 0, 0, 4, 4, false);
+    place(p, 4, 0, 2, 2, false);
+  } else if (mode === 'REFERENCE'){
+    place(w, 0, 0, 3, 4, false);
+    place(p, 3, 0, 2, 2, false);
+  } else if (mode === 'OUTPUT'){
+    place(w, 0, 0, 4, 3, false);
+    place(p, 4, 0, 2, 2, false);
+  } else { // FLOW
+    place(w, 0, 0, 4, 4, false);
+    place(p, 4, 0, 2, 2, false);
+  }
+  document.querySelectorAll('#modes button').forEach(b =>
+    b.classList.toggle('active', b.dataset.mode === mode));
+  render(); saveSoon();
+}
+
+/* ---------------- persistence ---------------- */
+function pick(c){
+  return {id:c.id, kind:c.kind, x:c.x, y:c.y, w:c.w, h:c.h, collapsed:c.collapsed,
+          behavior:c.behavior, cfg:Object.assign({},c.cfg), children:[...c.children],
+          activeChild:c.activeChild, inside:c.inside, queue:c.queue,
+          items:c.items.map(i=>Object.assign({},i)), data:Object.assign({},c.data)};
+}
+function serialize(){
+  const cubes = {};
+  Object.values(deck.cubes).forEach(c => cubes[c.id] = pick(c));
+  return {v:1, preset:deck.preset, seq:deck.seq, z:deck.z, order:[...deck.order], cubes};
+}
+function save(){
+  try{ localStorage.setItem(LS, JSON.stringify(serialize())); }catch(e){}
+  pushHistory();
+  TRAILER.fire('persist','layout saved · history +1');
+  const el = $('#save-state');
+  el.textContent = 'saved ✓ ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  el.classList.add('ok');
+  setTimeout(()=>el.classList.remove('ok'), 1600);
+}
+function saveSoon(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(save, 400);
+}
+function restore(){
+  let raw = null;
+  try{ raw = localStorage.getItem(LS); }catch(e){}
+  if (!raw) return false;
+  try{
+    const d = JSON.parse(raw);
+    if (d.v !== 1) return false;
+    const cubes = {};
+    Object.entries(d.cubes).forEach(([id,c]) => {
+      if (c.kind === 'project'){
+        const fresh = byFolder(c.data.folder);
+        if (fresh) c.data = fresh;          // keep titles fresh, keep layout
+      }
+      if (c.kind === 'agent'){
+        const fresh = AGENTS.find(a => a.id === c.data.id);
+        if (fresh) c.data = fresh;          // refresh status/last chat
+      }
+      cubes[id] = c;
+    });
+    deck = {preset:d.preset || 'focus', seq:d.seq || 1, z:d.z || 30, order:d.order || [], cubes};
+    Object.values(deck.cubes).forEach(c => { if (!c.type) c.type = TYPE_BY_KIND[c.kind] || 'basic'; });
+    return true;
+  }catch(e){ return false; }
+}
+
+/* ---------------- rendering ---------------- */
+function render(){
+  cv.innerHTML = '';
+  deck.order.forEach(id => {
+    const c = deck.cubes[id];
+    if (!c) return;
+    if (c.inside) return;                 // rendered by its stack
+    cv.appendChild(cubeEl(c));
+  });
+}
+
+function cubeEl(c){
+  const el = document.createElement('div');
+  el.className = 'cube kind-' + c.kind + (c.collapsed ? ' collapsed' : '');
+  el.dataset.id = c.id;
+  el.style.left = c.x+'px'; el.style.top = c.y+'px';
+  el.style.width = c.w+'px'; el.style.height = c.h+'px';
+  el.style.zIndex = c.z || 1;
+  /* PRD: color-coded borders by type (basic | ai | app | workflow) */
+  el.style.borderColor = TYPE_COLORS[c.type] || 'var(--line)';
+  el.style.borderWidth = '2px';
+  if (c.kind === 'nextstep') el.style.borderStyle = 'dashed';
+  el.innerHTML = headHtml(c) + (c.kind === 'stack' ? stackHtml(c) : bodyHtml(c));
+  if (c.behavior === 'flag' && c.kind === 'nextstep') el.insertAdjacentHTML('beforeend','<span class="flag">FLAG</span>');
+  el.insertAdjacentHTML('beforeend','<div class="cube-resize"></div>');
+  attachCube(el, c);
+  return el;
+}
+
+function headHtml(c){
+  const dot = '<span class="kind-dot"></span>';
+  const title = '<span class="cube-title" data-title>' + esc(titleOf(c)) + '</span>';
+  const sub = (c.kind==='project' && c.data.lane) ? '<span class="small">'+esc(c.data.lane)+'</span>' : '';
+  const chev = '<button class="chev" title="collapse/expand">' + (c.collapsed?'▸':'▾') + '</button>';
+  const beh = '<span class="chip beh" title="reassign this sprite\'s behavior">⚡ ' + esc(c.behavior) + '</span>';
+  return '<div class="cube-head">' + dot + title + sub + beh + chev + '</div>';
+}
+
+function bodyHtml(c){
+  const map = {
+    project: bodyProject, nextstep: bodyNextstep, list: bodyList,
+    agent: bodyAgent, note: bodyNote, link: bodyLink, write: bodyWrite, drafts: bodyDrafts, critique: bodyCritique
+  };
+  const fn = map[c.kind] || (()=>'');
+  return '<div class="cube-body">' + fn(c) + '</div>';
+}
+
+function laneChip(lane){
+  const l = String(lane||'?').toUpperCase();
+  const col = LANE_COLORS[l] || '#8a93a3';
+  return '<span class="lane-chip" style="background:rgba(0,0,0,.35);color:'+col+';border:1px solid '+col+'55">'+esc(l)+'</span>';
+}
+
+function bodyProject(c){
+  const d = c.data;
+  let tags = '';
+  if (d.tags && d.tags.length) tags = '<div class="pr-tags">' + d.tags.slice(0,6).map(t =>
+    '<span class="lane-chip" style="color:var(--faint);border:1px solid var(--line)">#'+esc(t)+'</span>').join('') + '</div>';
+  const pri = d.priority ? ' <span class="lane-chip" style="color:'+(d.priority==='1'?'var(--bad)':d.priority==='2'?'var(--warn)':'var(--list)')+';border:1px solid var(--line)">P'+esc(d.priority)+'</span>' : '';
+  const rev = d.revenue ? ' <span class="lane-chip" style="color:#fde047;border:1px solid #6b6422">$</span>' : '';
+  let status = '';
+  if (d.status) status = '<div class="pr-status">' + esc(d.status) + '</div>';
+  let items = '';
+  const list = (d.nextItems && d.nextItems.length) ? d.nextItems : (d.nextAction ? [d.nextAction] : []);
+  if (list.length){
+    items = '<div class="sprite-list">' + list.map(t =>
+      '<div class="sprite-item" data-idx="'+list.indexOf(t)+'"><span class="grab" title="drag out as a sprite">⋮⋮</span>' +
+      '<span class="txt">'+esc(t)+'</span></div>').join('') + '</div>';
+  } else {
+    items = '<div class="list-empty">no next action recorded — add one to NEXT_ACTION.md</div>';
+  }
+  return '<div class="pr-lane-wrap">' + laneChip(d.lane) + pri + rev + '</div>' + tags + status + items;
+}
+
+function bodyNextstep(c){
+  const d = c.data;
+  return '<div style="color:var(--dim);font-size:11px;margin-bottom:4px">sprite · from <b style="color:var(--text)">' + esc(d.project||'—') + '</b></div>' +
+         '<div style="font-size:11.5px;line-height:1.5">' + esc(d.text||'') + '</div>';
+}
+
+function bodyList(c){
+  const d = c.data;
+  const hint = d.hint ? '<div class="list-hint">'+esc(d.hint)+'</div>' : '';
+  if (!c.items.length){
+    return hint + '<div class="list-empty">no sprites joined yet — drag a next-step out of a project cube and drop it here</div>';
+  }
+  let clear = '';
+  if (c.items.length) clear = '<div style="text-align:right"><button class="icon-btn" data-clear style="font-size:10.5px">clear all</button></div>';
+  const rows = c.items.map(it =>
+    '<div class="list-row"><span class="txt">'+esc(it.text)+'</span>' +
+    '<span class="proj">'+esc(it.project||'')+'</span>' +
+    '<button class="icon-btn" data-open title="open project page">↗</button>' +
+    '<button class="icon-btn" data-rm title="remove from list">✕</button></div>').join('');
+  return hint + rows + clear;
+}
+
+function bodyAgent(c){
+  const d = c.data;
+  const s = d.status || 'unknown';
+  const rows = [];
+  if (c.cfg.showStatus){
+    rows.push('<div class="ag-status"><span class="ag-dot '+esc(s)+'"></span><span>status: <b>'+esc(s)+'</b>' +
+              (d.lastSeen ? ' · last seen '+esc(d.lastSeen) : '') + '</span></div>');
+  }
+  if (c.cfg.showChat){
+    rows.push('<div class="ag-chat">last chat: <b>' + esc(d.chatLoc || 'no recent chats') + '</b></div>');
+  }
+  const toggles = '<div class="ag-toggles">' +
+    '<span class="chip '+(c.cfg.showStatus?'on':'')+'" data-tog="showStatus">status</span>' +
+    '<span class="chip '+(c.cfg.showChat?'on':'')+'" data-tog="showChat">chat loc</span>' +
+    '<span class="chip '+(c.cfg.showQueue?'on':'')+'" data-tog="showQueue">queue</span>' +
+    '</div>';
+  let queue = '';
+  if (c.cfg.showQueue){
+    const items = c.queue.map((q,i) =>
+      '<div class="q-item"><span class="txt">'+esc(q.text)+'</span>' +
+      '<span class="'+(q.sent?'sent':'unsent')+'">'+(q.sent?'in inbox':'queued · not sent')+'</span>' +
+      '<button class="icon-btn" data-copy title="copy assign brief">⧉</button>' +
+      '<button class="icon-btn" data-send title="send to inbox (.md repo)">➤</button>' +
+      '<button class="icon-btn" data-qrm>✕</button></div>').join('');
+    queue = '<div class="ag-queue">' +
+      '<input placeholder="assign task to '+esc(d.name)+' …" data-qin>' + items + '</div>';
+  }
+  let pending = '';
+  const pend = (deck.inbox || {})[c.data.id];
+  if (pend && pend.length){
+    pending = '<div class="list-hint" style="margin-top:6px">inbox: '+pend.length+' brief(s)</div>' +
+      pend.map(p => '<div class="q-item"><span class="txt">'+esc(p.task)+'</span>' +
+        '<button class="icon-btn" data-cpath title="copy file path">⧉</button>' +
+        '<button class="icon-btn" data-claim title="claim — remove from inbox">✓</button></div>').join('');
+  }
+  return rows.join('') + toggles + queue + pending;
+}
+
+function bodyNote(c){
+  return '<div class="note-body">' + (c.data.text||'') + '</div>';
+}
+
+const countWords = s => (String(s||'').trim().match(/\S+/g)||[]).length;
+
+function bodyWrite(c){
+  const d = c.data;
+  const btns = bridge
+    ? '<button class="icon-btn" data-wsave title="save draft to file — explicit commit (Ctrl+S)">💾 save</button>' +
+      '<button class="icon-btn" data-wexp title="export .md + .txt (Ctrl+E)">⬇ export</button>'
+    : '<span style="color:var(--faint)">no bridge — draft stays in the deck until you run bridge.py</span>';
+  return '<textarea class="write-ta" data-ta spellcheck="false" placeholder="Write. Nothing else exists.\n\n(Save is explicit: Ctrl+S. Export: Ctrl+E. The file never changes until you say so.)">' + esc(d.draft || '') + '</textarea>' +
+    '<div class="write-bar"><span class="write-count" data-count>' + countWords(d.draft) + ' words</span>' + btns + '</div>';
+}
+function bodyDrafts(c){
+  const rows = (c.data.drafts || []).map(dt =>
+    '<div class="list-row"><span class="txt">'+esc(dt.name)+'</span>' +
+    '<span class="proj">'+dt.words+'w · '+esc(dt.mtime)+'</span>' +
+    '<button class="icon-btn" data-dopen title="open in WRITE">↗</button></div>').join('');
+  return '<div class="list-hint">' + (c.data.drafts || []).length + ' draft(s) in drafts/</div>' + rows +
+    '<div style="margin-top:6px;display:flex;gap:6px;align-items:center">' +
+    '<button class="insp-btn" data-dnew>＋ new</button>' +
+    '<button class="icon-btn" data-dref title="refresh">⟳</button></div>';
+}
+function bodyCritique(c){
+  const d = c.data;
+  const agentSel = bridge
+    ? '<select data-cagent>' + AGENTS.map(a =>
+        '<option value="'+esc(a.id)+'"'+(d.agent===a.id?' selected':'')+'>'+esc(a.name)+'</option>').join('') + '</select>'
+    : '<span style="color:var(--faint)">no bridge</span>';
+  const tlabels = {summarize:'summarize the draft', structure:'structural analysis', keyphrases:'key phrase extraction'};
+  const checks = ['summarize','structure','keyphrases'].map(t =>
+    '<label class="crit-task"><input type="checkbox" data-ctask value="'+t+'"'+(d.tasks&&d.tasks[t]?' checked':'')+'>'+tlabels[t]+'</label>').join('');
+  const crits = (d.critiques || []).map(ct =>
+    '<div class="q-item"><span class="txt" title="'+esc(ct.preview)+'">'+esc(ct.name)+'</span>' +
+    '<span class="proj">'+esc(ct.mtime||'')+'</span>' +
+    '<button class="icon-btn" data-cland title="land as note cube">▸</button></div>').join('');
+  return '<div class="list-hint">AI critique — after the human. Summoned, never automatic.</div>' +
+    '<div class="crit-row">agent ' + agentSel + '</div>' +
+    '<div class="crit-checks">' + checks + '</div>' +
+    '<div style="margin-top:6px"><button class="insp-btn" data-csend>🎓 send critique brief</button></div>' +
+    '<div class="list-hint" style="margin-top:8px">' + (d.critiques||[]).length + ' returned critique(s)</div>' + crits +
+    '<div style="margin-top:6px"><button class="icon-btn" data-cref title="refresh">⟳</button></div>';
+}
+function findWriteCube(){
+  return Object.values(deck.cubes).find(c => c.kind === 'write');
+}
+async function saveDraft(c){
+  if (!bridge){ toast('no bridge — run: python .state/kiss/bridge.py'); return; }
+  const name = (c.data.title || 'untitled').trim() || 'untitled';
+  try{
+    const r = await fetch(bridge + '/draft', {method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name, content:c.data.draft || ''})});
+    const j = await r.json();
+    if (j.ok){ c.data.dirty = false; render(); toast('draft saved → drafts/' + name + '.md'); TRAILER.fire('persist','draft committed → drafts/' + name + '.md'); }
+    else toast('save failed: ' + (j.error || '?'));
+  }catch(err){ toast('bridge unreachable'); }
+}
+async function exportDraft(c){
+  if (!bridge){ toast('no bridge'); return; }
+  const name = (c.data.title || 'untitled').trim() || 'untitled';
+  try{
+    const r = await fetch(bridge + '/export', {method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name, content:c.data.draft || ''})});
+    const j = await r.json();
+    if (j.ok){ toast('exported → drafts/export/' + name + ' (.md + .txt)'); TRAILER.fire('share','exported .md + .txt'); }
+    else toast('export failed: ' + (j.error || '?'));
+  }catch(err){ toast('bridge unreachable'); }
+}
+async function refreshDrafts(c){
+  if (!bridge) return;
+  try{
+    const r = await fetch(bridge + '/drafts', {cache:'no-store'});
+    const j = await r.json();
+    const next = j.drafts || [];
+    const same = JSON.stringify(next) === JSON.stringify(c.data.drafts || []);
+    c.data.drafts = next;
+    if (!same) render();
+  }catch(e){}
+}
+async function loadDraftIntoWrite(draftsCube, name){
+  const w = findWriteCube();
+  if (!w){ toast('no WRITE cube on the board'); return; }
+  if (!bridge){ toast('no bridge'); return; }
+  try{
+    const r = await fetch(bridge + '/draft?name=' + encodeURIComponent(name), {cache:'no-store'});
+    const j = await r.json();
+    if (j.content === undefined){ toast('load failed: ' + (j.error || '?')); return; }
+    w.data.draft = j.content;
+    w.data.title = name;
+    w.data.dirty = false;
+    render();
+    toast('opened draft: ' + name);
+  }catch(err){ toast('bridge unreachable'); }
+}
+function mdToNoteHtml(t){
+  return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+async function sendCritique(c){
+  if (!bridge){ toast('no bridge — start: python .state/kiss/bridge.py'); return; }
+  const w = findWriteCube();
+  if (!w){ toast('no WRITE cube on the board'); return; }
+  const draft = (w.data.draft || '').trim();
+  if (!draft){ toast('draft is empty — write first, then critique'); return; }
+  const tasks = ['summarize','structure','keyphrases'].filter(t => c.data.tasks && c.data.tasks[t]);
+  if (!tasks.length){ toast('pick at least one critique task'); return; }
+  const name = (w.data.title || 'untitled').trim() || 'untitled';
+  try{
+    const r = await fetch(bridge + '/critique', {method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({agent:c.data.agent||'codex', draft:name, draftText:draft, tasks})});
+    const j = await r.json();
+    if (j.ok){ toast('critique brief → inbox/' + (c.data.agent||'codex') + '/'); TRAILER.fire('agent','critique brief → inbox'); loadBriefs(); }
+    else toast('bridge error: ' + (j.error || '?'));
+  }catch(err){ toast('bridge unreachable'); }
+}
+async function refreshCritiques(c){
+  if (!bridge) return;
+  try{
+    const r = await fetch(bridge + '/critiques', {cache:'no-store'});
+    const j = await r.json();
+    const next = j.critiques || [];
+    const same = JSON.stringify(next) === JSON.stringify(c.data.critiques || []);
+    c.data.critiques = next;
+    if (!same) render();
+  }catch(e){}
+}
+async function landCritique(cube, name){
+  if (!bridge){ toast('no bridge'); return; }
+  try{
+    const r = await fetch(bridge + '/critique?name=' + encodeURIComponent(name), {cache:'no-store'});
+    const j = await r.json();
+    if (j.content === undefined){ toast('load failed: ' + (j.error || '?')); return; }
+    const s = firstFreeSlot(2, 3);
+    const n = makeCube('note', s.x, s.y, s.w, s.h, {title:'critique · ' + name, text: mdToNoteHtml(j.content)});
+    deck.cubes[n.id] = n; deck.order.push(n.id);
+    render(); saveSoon();
+    toast('critique landed as a note cube');
+    TRAILER.fire('agent','critique landed → note cube');
+  }catch(err){ toast('bridge unreachable'); }
+}
+function bodyLink(c){
+  const d = c.data;
+  return (d.desc ? '<div style="font-size:11px;color:var(--dim);margin-bottom:6px">'+esc(d.desc)+'</div>' : '') +
+    '<div class="list-hint" style="word-break:break-all;font-family:var(--mono);font-size:10.5px">'+esc(d.url||'')+'</div>' +
+    '<div style="margin-top:8px"><button class="insp-btn" data-open-link></button></div>';
+}
+function doLink(c){
+  const u = (c.data.url||'').trim();
+  if (!u){ toast('no url'); return; }
+  if (c.behavior === 'copy'){ copyText(u); toast('url copied: ' + u); }
+  else { try{ window.open(u, '_blank'); }catch(err){ toast('could not open: ' + u); } }
+}
+
+function stackHtml(c){
+  const tabs = c.children.map(id => {
+    const ch = deck.cubes[id];
+    if (!ch) return '';
+    const t = esc(titleOf(ch));
+    return '<span class="tab '+(c.activeChild===id?'active':'')+'" data-tab="'+id+'">' +
+           '<span class="t">'+t+'</span><span class="x" data-pop="'+id+'">✕</span></span>';
+  }).join('');
+  const active = deck.cubes[c.activeChild];
+  const inner = active ? bodyHtml(active) : '';
+  return '<div class="stack-tabs">'+tabs+'</div><div class="stack-body">'+inner+'</div>';
+}
+
+/* ---------------- interactions ---------------- */
+function attachCube(el, c){
+  const head = el.querySelector('.cube-head');
+  let holdTimer = null, holdStart = null;
+  head.addEventListener('pointerdown', e => {
+    if (e.target.closest('.chip,.chev,.tab,.x')) return;
+    if (e.button !== 0) return;
+    if (c.inside) return;
+    startDrag(e, c, el);
+    /* touch: long-press opens "make this cube a…" (Android/iOS); jitter-safe */
+    if (e.pointerType === 'touch'){
+      holdStart = {x:e.clientX, y:e.clientY};
+      holdTimer = setTimeout(() => { holdTimer = null; ctxMenu(e, c); }, 550);
+    }
+  });
+  head.addEventListener('dblclick', e => {
+    if (e.target.closest('.chip,.chev')) return;
+    if (e.target.closest('[data-title]')){ editLabel(el, c); return; }
+    c.collapsed = !c.collapsed;
+    render(); saveSoon();
+  });
+  /* PRD: hold a cube (touch) or right-click -> "make this cube a…" */
+  el.addEventListener('contextmenu', e => {
+    if (e.target.closest('input,textarea')) return;
+    e.preventDefault();
+    ctxMenu(e, c);
+  });
+  const clearHold = ev => {
+    if (!holdTimer) return;
+    /* ignore finger jitter; cancel only on a real drag (>8px) */
+    if (holdStart && ev.clientX !== undefined &&
+        Math.abs(ev.clientX-holdStart.x) + Math.abs(ev.clientY-holdStart.y) > 8){
+      clearTimeout(holdTimer); holdTimer = null;
+    }
+  };
+  const endHold = () => { clearTimeout(holdTimer); holdTimer = null; holdStart = null; };
+  head.addEventListener('pointerup', endHold);
+  head.addEventListener('pointermove', clearHold);
+  head.addEventListener('pointerleave', endHold);
+  head.addEventListener('pointercancel', endHold);
+  head.addEventListener('dragstart', e => { e.preventDefault(); endHold(); });
+  const chev = el.querySelector('.chev');
+  if (chev) chev.addEventListener('click', () => { c.collapsed = !c.collapsed; render(); saveSoon(); });
+
+  const beh = el.querySelector('.beh');
+  if (beh) beh.addEventListener('click', e => { e.stopPropagation(); behMenu(e, c); });
+
+  const rz = el.querySelector('.cube-resize');
+  rz.addEventListener('pointerdown', e => {
+    if (e.button !== 0) return;
+    e.stopPropagation();
+    const sx = e.clientX, sy = e.clientY, sw = c.w, sh = c.h;
+    try{ el.setPointerCapture(e.pointerId); }catch(err){}
+    const mv = ev => {
+      c.w = snapW(clamp(sw + (ev.clientX - sx), CELL, 900));
+      c.h = snapH(clamp(sh + (ev.clientY - sy), CELL, 700));
+      el.style.width = c.w+'px'; el.style.height = c.h+'px';
+    };
+    const up = () => { el.removeEventListener('pointermove', mv); el.removeEventListener('pointerup', up); saveSoon(); };
+    el.addEventListener('pointermove', mv);
+    el.addEventListener('pointerup', up);
+  });
+
+  if (c.kind === 'project'){
+    el.querySelectorAll('.sprite-item').forEach(row => {
+      row.querySelector('.grab').addEventListener('pointerdown', e => {
+        if (e.button !== 0) return;
+        e.stopPropagation();
+        spawnSpriteDrag(e, c, row);
+      });
+    });
+    el.addEventListener('click', e => {
+      if (e.target.closest('.sprite-item,.grab,.chip,.chev,.cube-resize')) return;
+      if (c.behavior === 'link' && c.data.pageHref){ window.open(c.data.pageHref,'_blank'); }
+      else showInspector(c);
+    });
+  }
+  if (c.kind === 'nextstep'){
+    el.addEventListener('click', e => {
+      if (e.target.closest('.chip,.chev,.cube-resize')) return;
+      showInspector(c);
+    });
+  }
+  if (c.kind === 'list'){
+    el.querySelectorAll('[data-rm]').forEach(b => b.addEventListener('click', e => {
+      e.stopPropagation();
+      const i = [...el.querySelectorAll('[data-rm]')].indexOf(b);
+      c.items.splice(i,1); render(); saveSoon();
+      toast('removed from '+c.data.title);
+    }));
+    el.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', e => {
+      e.stopPropagation();
+      const i = [...el.querySelectorAll('[data-open]')].indexOf(b);
+      const it = c.items[i];
+      if (it && it.pageHref) window.open(it.pageHref,'_blank');
+    }));
+    const clr = el.querySelector('[data-clear]');
+    if (clr) clr.addEventListener('click', e => { e.stopPropagation(); c.items = []; render(); saveSoon(); toast('master list cleared'); });
+  }
+  if (c.kind === 'agent'){
+    el.querySelectorAll('[data-tog]').forEach(ch => ch.addEventListener('click', () => {
+      c.cfg[ch.dataset.tog] = !c.cfg[ch.dataset.tog];
+      render(); saveSoon();
+    }));
+    const qin = el.querySelector('[data-qin]');
+    if (qin) qin.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && qin.value.trim()){
+        c.queue.push({text:qin.value.trim(), ts:Date.now(), sent:false});
+        qin.value = '';
+        render(); saveSoon();
+        toast('task queued for '+c.data.name+' — not sent yet');
+      }
+    });
+    el.querySelectorAll('[data-copy]').forEach(b => b.addEventListener('click', e => {
+      e.stopPropagation();
+      const i = [...el.querySelectorAll('[data-copy]')].indexOf(b);
+      const q = c.queue[i];
+      if (!q) return;
+      const brief = 'ASSIGN TO ' + c.data.name + '\n' +
+                    'type: ' + (c.data.type||'CLI agent') + '\n' +
+                    'status: ' + (c.data.status||'unknown') + '\n' +
+                    'last chat: ' + (c.data.chatLoc||'—') + '\n\n' +
+                    'TASK: ' + q.text + '\n\n' +
+                    '(assigned from KISS deck — paste this into ' + c.data.name + ' when you open it)';
+      copyText(brief);
+      q.sent = true;
+      render(); saveSoon();
+      toast('brief copied — paste into ' + c.data.name);
+    }));
+    el.querySelectorAll('[data-qrm]').forEach(b => b.addEventListener('click', e => {
+      e.stopPropagation();
+      const i = [...el.querySelectorAll('[data-qrm]')].indexOf(b);
+      c.queue.splice(i,1); render(); saveSoon();
+    }));
+    el.querySelectorAll('[data-send]').forEach(b => b.addEventListener('click', async e => {
+      e.stopPropagation();
+      const i = [...el.querySelectorAll('[data-send]')].indexOf(b);
+      const q = c.queue[i];
+      if (!q || q.sent) return;
+      if (!bridge){ toast('no bridge running — start: python .state/kiss/bridge.py'); return; }
+      try{
+        const r = await fetch(bridge + '/brief', {method:'POST', headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({agent:c.data.id, name:c.data.name, type:c.data.type||'',
+            status:c.data.status||'', chatLoc:c.data.chatLoc||'', task:q.text})});
+        const j = await r.json();
+        if (j.ok){ q.sent = true; q.file = j.path; render(); saveSoon();
+          toast('brief written to inbox/' + c.data.id + '/'); TRAILER.fire('agent','brief → inbox/' + c.data.id + '/'); loadBriefs(); }
+        else toast('bridge error: ' + (j.error || '?'));
+      }catch(err){ toast('bridge unreachable'); }
+    }));
+    el.querySelectorAll('[data-cpath]').forEach(b => b.addEventListener('click', e => {
+      e.stopPropagation();
+      const i = [...el.querySelectorAll('[data-cpath]')].indexOf(b);
+      const p = ((deck.inbox||{})[c.data.id]||[])[i];
+      if (p) copyText(p.path);
+    }));
+    el.querySelectorAll('[data-claim]').forEach(b => b.addEventListener('click', async e => {
+      e.stopPropagation();
+      const i = [...el.querySelectorAll('[data-claim]')].indexOf(b);
+      const p = ((deck.inbox||{})[c.data.id]||[])[i];
+      if (!p || !bridge) return;
+      try{
+        const r = await fetch(bridge + '/brief?path=' + encodeURIComponent(p.path), {method:'DELETE'});
+        if (r.ok){ toast('claimed — removed from inbox'); TRAILER.fire('agent','brief claimed · removed'); loadBriefs(); }
+      }catch(err){}
+    }));
+  }
+  if (c.kind === 'stack'){
+    el.querySelectorAll('[data-tab]').forEach(t => t.addEventListener('click', () => {
+      c.activeChild = t.dataset.tab; render(); saveSoon();
+    }));
+    el.querySelectorAll('[data-pop]').forEach(t => t.addEventListener('click', e => {
+      e.stopPropagation();
+      popOut(c, t.dataset.pop);
+    }));
+  }
+  if (c.kind === 'link'){
+    const ob = el.querySelector('[data-open-link]');
+    if (ob){
+      ob.textContent = c.behavior === 'copy' ? '⧉ copy url' : 'open →';
+      ob.addEventListener('click', e => { e.stopPropagation(); doLink(c); });
+    }
+    el.addEventListener('click', e => {
+      if (e.target.closest('.cube-head,.chip,.chev,.cube-resize,[data-open-link]')) return;
+      doLink(c);
+    });
+  }
+  if (c.kind === 'write'){
+    const ta = el.querySelector('[data-ta]');
+    const cnt = el.querySelector('[data-count]');
+    if (ta){
+      ta.addEventListener('pointerdown', e => e.stopPropagation());
+      ta.addEventListener('input', () => {
+        c.data.draft = ta.value;
+        c.data.dirty = true;
+        if (cnt) cnt.textContent = countWords(ta.value) + ' words';
+        saveSoon();
+      });
+    }
+    const ws = el.querySelector('[data-wsave]');
+    if (ws) ws.addEventListener('click', e => { e.stopPropagation(); saveDraft(c); });
+    const we = el.querySelector('[data-wexp]');
+    if (we) we.addEventListener('click', e => { e.stopPropagation(); exportDraft(c); });
+  }
+  if (c.kind === 'drafts'){
+    el.querySelectorAll('[data-dopen]').forEach(b => b.addEventListener('click', e => {
+      e.stopPropagation();
+      const i = [...el.querySelectorAll('[data-dopen]')].indexOf(b);
+      const dt = (c.data.drafts || [])[i];
+      if (dt) loadDraftIntoWrite(c, dt.name);
+    }));
+    const dref = el.querySelector('[data-dref]');
+    if (dref) dref.addEventListener('click', e => { e.stopPropagation(); refreshDrafts(c); });
+    const dnew = el.querySelector('[data-dnew]');
+    if (dnew) dnew.addEventListener('click', async e => {
+      e.stopPropagation();
+      const name = prompt('Name the new draft:');
+      if (!name || !name.trim()) return;
+      if (!bridge){ toast('no bridge'); return; }
+      try{
+        await fetch(bridge + '/draft', {method:'POST', headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({name:name.trim(), content:''})});
+        await refreshDrafts(c);
+        await loadDraftIntoWrite(c, name.trim());
+      }catch(err){ toast('bridge unreachable'); }
+    });
+    refreshDrafts(c);
+  }
+  if (c.kind === 'critique'){
+    const sel = el.querySelector('[data-cagent]');
+    if (sel) sel.addEventListener('change', e => { e.stopPropagation(); c.data.agent = sel.value; saveSoon(); });
+    el.querySelectorAll('[data-ctask]').forEach(cb => cb.addEventListener('change', e => {
+      e.stopPropagation();
+      c.data.tasks = c.data.tasks || {};
+      c.data.tasks[cb.value] = cb.checked;
+      saveSoon();
+    }));
+    const snd = el.querySelector('[data-csend]');
+    if (snd) snd.addEventListener('click', e => { e.stopPropagation(); sendCritique(c); });
+    el.querySelectorAll('[data-cland]').forEach(b => b.addEventListener('click', e => {
+      e.stopPropagation();
+      const i = [...el.querySelectorAll('[data-cland]')].indexOf(b);
+      const ct = (c.data.critiques || [])[i];
+      if (ct) landCritique(c, ct.name);
+    }));
+    const ref = el.querySelector('[data-cref]');
+    if (ref) ref.addEventListener('click', e => { e.stopPropagation(); refreshCritiques(c); });
+    refreshCritiques(c);
+  }
+}
+function addLinkCube(link){
+  const s = firstFreeSlot(2,1);
+  const cl = makeCube('link', s.x, s.y, s.w, s.h, {title:link.title, url:link.url, desc:link.desc||''});
+  deck.cubes[cl.id] = cl; deck.order.push(cl.id);
+}
+
+/* ---------------- contextual menu (make this cube a…) ---------------- */
+function elOf(c){ return document.querySelector('.cube[data-id="'+c.id+'"]'); }
+function editLabel(el, c){
+  const t = el.querySelector('[data-title]');
+  if (!t) return;
+  const inp = document.createElement('input');
+  inp.className = 'edit-inp';
+  inp.value = titleOf(c);
+  let fin = false;
+  const done = ok => {
+    if (fin) return; fin = true;
+    if (ok && inp.value.trim()){
+      c.label = inp.value.trim();
+      TRAILER.fire('state','label → ' + inp.value.trim());
+    }
+    render(); saveSoon();
+  };
+  t.replaceWith(inp);
+  inp.focus(); inp.select();
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') done(true); if (e.key === 'Escape') done(false); });
+  inp.addEventListener('blur', () => done(true));
+  inp.addEventListener('pointerdown', e => e.stopPropagation());
+}
+function menuOpt(label, danger){
+  const b = document.createElement('button');
+  b.className = 'opt' + (danger ? ' danger' : '');
+  b.textContent = label;
+  return b;
+}
+function showMenuAt(m, e){
+  m.style.left = Math.min(e.clientX, window.innerWidth - 240) + 'px';
+  m.style.top = Math.min(e.clientY, window.innerHeight - 360) + 'px';
+  document.body.appendChild(m);
+  setTimeout(() => document.addEventListener('pointerdown', closeMenus, {once:true}), 0);
+}
+function ctxMenu(e, c){
+  TRAILER.fire('ui','context menu · make this cube a…');
+  closeMenus();
+  const m = document.createElement('div');
+  m.className = 'beh-menu';
+  let h = document.createElement('div'); h.className='menu-head'; h.textContent='make this cube a…';
+  m.appendChild(h);
+  ['basic','ai','app','workflow'].forEach(t => {
+    const b = menuOpt((c.type===t ? '● ' : '○ ') + t +
+      (t==='ai' ? '  (agent/ai)' : t==='app' ? '  (app/tool)' : t==='workflow' ? '  (workflow/sprite)' : '  (plain)'));
+    if (c.type === t) b.classList.add('sel');
+    b.addEventListener('click', () => { c.type = t; closeMenus(); render(); saveSoon(); toast('type → ' + t); });
+    m.appendChild(b);
+  });
+  h = document.createElement('div'); h.className='menu-head'; h.textContent='actions';
+  m.appendChild(h);
+  const ren = menuOpt('✏️ rename');
+  ren.addEventListener('click', () => { closeMenus(); const el = elOf(c); if (el) editLabel(el, c); });
+  m.appendChild(ren);
+  [['1×1',1,1],['2×1',2,1],['2×2',2,2]].forEach(([lab,cc,rr]) => {
+    const b = menuOpt('resize ' + lab);
+    b.addEventListener('click', () => { closeMenus(); applySize(c, cc, rr); });
+    m.appendChild(b);
+  });
+  const col = menuOpt(c.collapsed ? '▸ expand' : '▾ collapse');
+  col.addEventListener('click', () => { c.collapsed = !c.collapsed; closeMenus(); render(); saveSoon(); });
+  m.appendChild(col);
+  if (c.kind !== 'stack'){
+    const dup = menuOpt('⧉ duplicate');
+    dup.addEventListener('click', () => { closeMenus(); cloneCube(c); });
+    m.appendChild(dup);
+  }
+  const del = menuOpt('🗑 delete', true);
+  del.addEventListener('click', () => { closeMenus(); delCube(c); });
+  m.appendChild(del);
+  showMenuAt(m, e);
+}
+function applySize(c, cols, rows){
+  const s = sizePreset(cols, rows);
+  c.w = s.w; c.h = s.h; c.x = snapX(c.x); c.y = snapY(c.y);
+  render(); saveSoon(); toast('resized ' + cols + '×' + rows);
+}
+function cloneCube(c){
+  const n = makeCube(c.kind, c.x + CELL, c.y + CELL, c.w, c.h, JSON.parse(JSON.stringify(c.data||{})),
+    {type:c.type, label:c.label ? c.label + ' (copy)' : null, collapsed:c.collapsed,
+     queue:(c.queue||[]).map(q=>Object.assign({},q)), items:(c.items||[]).map(i=>Object.assign({},i)),
+     children:[], activeChild:null, inside:null});
+  n.behavior = c.behavior;
+  deck.cubes[n.id] = n; deck.order.push(n.id);
+  render(); saveSoon(); toast('duplicated');
+}
+function delCube(c){
+  if (c.inside){
+    const st = deck.cubes[c.inside];
+    if (st){
+      st.children = st.children.filter(id => id !== c.id);
+      if (st.activeChild === c.id) st.activeChild = st.children[0] || null;
+    }
+  }
+  const i = deck.order.indexOf(c.id);
+  if (i > -1) deck.order.splice(i,1);
+  delete deck.cubes[c.id];
+  render(); saveSoon(); toast('deleted — recover from History if needed');
+}
+function firstFreeSlot(cols, rows){
+  const w = cols*CELL+(cols-1)*GAP, h = rows*CELL+(rows-1)*GAP;
+  for (let r = 0; r < 14; r++) for (let c = 0; c < 9; c++){
+    const x = PAD+c*(CELL+GAP), y = PAD+r*(CELL+GAP);
+    const hit = Object.values(deck.cubes).some(o => !o.inside &&
+      !(x+w <= o.x || o.x+o.w <= x || y+h <= o.y || o.y+o.h <= y));
+    if (!hit) return {x, y, w, h};
+  }
+  return {x:PAD, y:PAD+14*(CELL+GAP), w, h};
+}
+function addAgentCube(a){
+  const s = firstFreeSlot(2,2);
+  const cl = makeCube('agent', s.x, s.y, s.w, s.h, a);
+  deck.cubes[cl.id] = cl; deck.order.push(cl.id);
+}
+function addProjectCube(p){
+  const s = firstFreeSlot(2,2);
+  const cl = makeCube('project', s.x, s.y, s.w, s.h, p);
+  deck.cubes[cl.id] = cl; deck.order.push(cl.id);
+}
+function addCubeMenu(e){
+  closeMenus();
+  const m = document.createElement('div');
+  m.className = 'beh-menu';
+  const h = document.createElement('div'); h.className='menu-head'; h.textContent='add a cube';
+  m.appendChild(h);
+  const ai = menuOpt('🤖 AI coders — Freebuff, Goose, Aionui, Cochat, Codex');
+  ai.addEventListener('click', () => { closeMenus(); AGENTS.forEach(addAgentCube); render(); saveSoon(); toast('5 coder cubes added'); });
+  m.appendChild(ai);
+  const proj = menuOpt('📁 project from ledger…');
+  proj.addEventListener('click', () => { m.innerHTML=''; buildProjectPicker(m); });
+  m.appendChild(proj);
+  if (LINKS.length){
+    const lnk = menuOpt('🔗 links from feeds (' + LINKS.length + ')');
+    lnk.addEventListener('click', () => { closeMenus(); LINKS.forEach(addLinkCube); render(); saveSoon(); toast(LINKS.length + ' link cubes added'); });
+    m.appendChild(lnk);
+  }
+  const blank = menuOpt('▢ blank cube');
+  blank.addEventListener('click', () => {
+    closeMenus();
+    const s = firstFreeSlot(2,1);
+    const c = makeCube('note', s.x, s.y, s.w, s.h, {title:'new cube', text:'Double-click the title to name me. Right-click for types / resize / duplicate / delete. Drag anything onto me to stack.'});
+    deck.cubes[c.id] = c; deck.order.push(c.id);
+    render(); saveSoon(); toast('blank cube added — dbl-click title to name it');
+  });
+  m.appendChild(blank);
+  showMenuAt(m, {clientX: window.innerWidth/2 - 120, clientY: 80});
+}
+function buildProjectPicker(m){
+  const h = document.createElement('div'); h.className='menu-head'; h.textContent='pick a project folder';
+  const inp = document.createElement('input');
+  inp.className = 'edit-inp'; inp.placeholder = 'search 110 projects…';
+  inp.style.margin = '0 6px 4px'; inp.style.width = 'calc(100% - 12px)';
+  const list = document.createElement('div');
+  list.style.maxHeight = '300px'; list.style.overflow = 'auto';
+  const renderList = q => {
+    list.innerHTML = '';
+    PROJECTS.filter(p => !q || (p.title+' '+p.folder+' '+(p.tags||[]).join(' ')).toLowerCase().includes(q))
+      .slice(0, 60).forEach(p => {
+        const b = menuOpt('📁 ' + p.title + ' · ' + p.lane);
+        b.addEventListener('click', () => { closeMenus(); addProjectCube(p); render(); saveSoon(); toast('project cube added: ' + p.title); });
+        list.appendChild(b);
+      });
+    if (!list.children.length){
+      const b = menuOpt('no matches'); list.appendChild(b);
+    }
+  };
+  inp.addEventListener('input', () => renderList(inp.value.toLowerCase()));
+  renderList('');
+  m.appendChild(h); m.appendChild(inp); m.appendChild(list);
+  inp.focus();
+}
+
+/* ---------------- theme + history + inbox bridge ---------------- */
+function applyTheme(t){
+  document.body.classList.toggle('minimal', t === 'minimal');
+  const b = $('#btn-theme'); if (b) b.textContent = t === 'minimal' ? 'Theme: light' : 'Theme: dark';
+  try{ localStorage.setItem('kiss.theme', t); }catch(e){}
+}
+function pushHistory(){
+  try{
+    let h = JSON.parse(localStorage.getItem('kiss.deck.history') || '[]');
+    h.push({ts: Date.now(), snap: serialize()});
+    if (h.length > 12) h = h.slice(-12);
+    localStorage.setItem('kiss.deck.history', JSON.stringify(h));
+  }catch(e){}
+}
+/* ---------------- Commit gate (Reference ≠ Representation) ----------------
+   Dragging/stacking/renaming only moves the representation (deck state).
+   Committing writes the layout out to a real deck file through the bridge —
+   the explicit gate the white paper mandates before any binding changes. */
+function commitMenu(){
+  closeMenus();
+  const m = document.createElement('div');
+  m.className = 'beh-menu';
+  const head = document.createElement('div'); head.className='menu-head'; head.textContent='commit layout to a deck file';
+  m.appendChild(head);
+  if (!bridge){
+    m.appendChild(menuOpt('no bridge — run: python .state/kiss/bridge.py'));
+    const b = $('#btn-commit'); const r = b.getBoundingClientRect();
+    showMenuAt(m, {clientX:r.left, clientY:r.bottom + 6});
+    return;
+  }
+  const inp = document.createElement('input');
+  inp.className = 'edit-inp';
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  inp.value = 'deck-' + now.getFullYear() + pad(now.getMonth()+1) + pad(now.getDate()) + '-' + pad(now.getHours()) + pad(now.getMinutes());
+  inp.style.margin = '0 6px 4px'; inp.style.width = 'calc(100% - 12px)';
+  const saveBtn = menuOpt('💾 commit as ' + inp.value);
+  const refresh = () => { saveBtn.textContent = '💾 commit as ' + (inp.value.trim() || 'deck'); };
+  inp.addEventListener('input', refresh);
+  saveBtn.addEventListener('click', async () => {
+    const name = inp.value.trim();
+    if (!name){ toast('name the deck first'); return; }
+    try{
+      const r = await fetch(bridge + '/deck', {method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({name, snap:serialize()})});
+      const j = await r.json();
+      if (j.ok){ closeMenus(); toast('committed → decks/' + name.replace(/[^A-Za-z0-9._-]/g,'') + '.json'); TRAILER.fire('share','deck committed → decks/' + name.replace(/[^A-Za-z0-9._-]/g,'') + '.json'); commitMenu(); }
+      else toast('bridge error: ' + (j.error || '?'));
+    }catch(err){ toast('bridge unreachable'); }
+  });
+  m.appendChild(inp); m.appendChild(saveBtn);
+  const h2 = document.createElement('div'); h2.className='menu-head'; h2.textContent='saved decks — click to load';
+  m.appendChild(h2);
+  try{
+    fetch(bridge + '/decks', {cache:'no-store'}).then(r => r.json()).then(j => {
+      const list = j.decks || [];
+      (list.length ? [...list].reverse() : []).forEach(dk => {
+        const b = menuOpt('⏏ ' + dk.name + '  ·  ' + dk.ts);
+        b.addEventListener('click', () => loadDeck(dk.name));
+        m.appendChild(b);
+      });
+      if (!list.length) m.appendChild(menuOpt('no deck files yet'));
+    }).catch(() => {});
+  }catch(e){}
+  const b = $('#btn-commit'); const r = b.getBoundingClientRect();
+  showMenuAt(m, {clientX:r.left, clientY:r.bottom + 6});
+}
+async function loadDeck(name){
+  try{
+    const r = await fetch(bridge + '/deck?name=' + encodeURIComponent(name), {cache:'no-store'});
+    const j = await r.json();
+    if (!j.snap){ toast('deck load failed: ' + (j.error || '?')); return; }
+    const v = j.snap;
+    deck = {preset:v.preset || 'focus', seq:v.seq || 1, z:v.z || 30, order:v.order || [], cubes:v.cubes || {}};
+    Object.values(deck.cubes).forEach(c => { if (!c.type) c.type = TYPE_BY_KIND[c.kind] || 'basic'; });
+    closeMenus(); render(); saveSoon();
+    toast('loaded deck: ' + name);
+    TRAILER.fire('share','deck loaded: ' + name);
+  }catch(err){ toast('bridge unreachable'); }
+}
+function histMenu(){
+  closeMenus();
+  const m = document.createElement('div');
+  m.className = 'beh-menu';
+  const head = document.createElement('div'); head.className='menu-head'; head.textContent='layout versions (last 12)';
+  m.appendChild(head);
+  let h = [];
+  try{ h = JSON.parse(localStorage.getItem('kiss.deck.history') || '[]'); }catch(err){}
+  if (!h.length){
+    m.appendChild(menuOpt('no versions yet — edits auto-save to history'));
+  } else {
+    [...h].reverse().forEach((v,i) => {
+      const b = menuOpt(new Date(v.ts).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'})
+        + ' · ' + Object.keys(v.snap.cubes).length + ' cubes');
+      b.addEventListener('click', () => {
+        deck = {preset:v.snap.preset||'focus', seq:v.snap.seq||1, z:v.snap.z||30,
+                order:v.snap.order||[], cubes:v.snap.cubes};
+        Object.values(deck.cubes).forEach(c => { if (!c.type) c.type = TYPE_BY_KIND[c.kind]||'basic'; });
+        closeMenus(); render(); saveSoon();
+        toast('restored version ' + (h.length - i));
+      });
+      m.appendChild(b);
+    });
+  }
+  const b = $('#btn-hist');
+  const r = b.getBoundingClientRect();
+  showMenuAt(m, {clientX:r.left, clientY:r.bottom + 6});
+}
+
+/* Bridge URL is overridable so a Mini Me phone can point at the Mothership's
+   LAN IP: index.html?bridge=192.168.1.50:8765 (or localStorage key kiss.bridge). */
+const BRIDGE_URL = (() => {
+  try{
+    const q = new URLSearchParams(location.search).get('bridge');
+    if (q) return /^https?:\/\//.test(q) ? q.replace(/\/+$/,'') : 'http://' + q.replace(/\/+$/,'');
+    const ls = localStorage.getItem('kiss.bridge');
+    if (ls) return ls.replace(/\/+$/,'');
+  }catch(e){}
+  return 'http://127.0.0.1:8765';
+})();
+let bridge = null;
+async function checkBridge(){
+  const el = $('#bridge-state');
+  try{
+    const ctl = new AbortController();
+    const t = setTimeout(() => ctl.abort(), 1500);
+    const r = await fetch(BRIDGE_URL + '/health', {cache:'no-store', signal:ctl.signal});
+    clearTimeout(t);
+    bridge = r.ok ? BRIDGE_URL : null;
+  }catch(e){ bridge = null; }
+  if (el){
+    el.textContent = bridge ? 'inbox: linked ✓' : 'inbox: local';
+    el.style.color = bridge ? 'var(--ok)' : 'var(--warn)';
+  }
+  return !!bridge;
+}
+async function loadBriefs(){
+  if (!bridge) return;
+  try{
+    const r = await fetch(bridge + '/briefs', {cache:'no-store'});
+    const j = await r.json();
+    if (!j.briefs) return;
+    const map = {};
+    j.briefs.forEach(b => { (map[b.agent] = map[b.agent] || []).push(b); });
+    deck.inbox = map;
+    render();
+  }catch(e){}
+}
+
+function startDrag(e, c, el){
+  const r = el.getBoundingClientRect();
+  const ox = e.clientX - r.left, oy = e.clientY - r.top;
+  let moved = false;
+  const sx = e.clientX, sy = e.clientY;
+  try{ el.setPointerCapture(e.pointerId); }catch(err){}
+  el.classList.add('dragging');
+  TRAILER.fire('user','drag begins');
+  TRAILER.fire('ui','capture · snap-to-grid', true);
+  TRAILER.hold('ui', true);
+  const mv = ev => {
+    if (!moved && Math.abs(ev.clientX-sx)+Math.abs(ev.clientY-sy) > 4) moved = true;
+    if (moved){
+      c.x = snapX(clamp(ev.clientX - ox, PAD, cv.clientWidth - CELL));
+      c.y = snapY(clamp(ev.clientY - oy, PAD, cv.clientHeight - CELL));
+      el.style.left = c.x+'px'; el.style.top = c.y+'px';
+      c.z = ++deck.z; el.style.zIndex = c.z;
+      TRAILER.hold('state', true);
+    }
+  };
+  const up = ev => {
+    el.classList.remove('dragging');
+    el.removeEventListener('pointermove', mv);
+    el.removeEventListener('pointerup', up);
+    TRAILER.hold('ui', false);
+    TRAILER.hold('state', false);
+    TRAILER.fire('ui','drag released');
+    TRAILER.fire('state', c.kind + ' moved · deck updated');
+    if (moved) handleDrop(c, ev.clientX, ev.clientY, el);
+    saveSoon();
+  };
+  el.addEventListener('pointermove', mv);
+  el.addEventListener('pointerup', up);
+}
+
+function spawnSpriteDrag(e, projCube, row){
+  const idx = [...row.parentElement.querySelectorAll('.sprite-item')].indexOf(row);
+  const items = (projCube.data.nextItems && projCube.data.nextItems.length)
+    ? projCube.data.nextItems : (projCube.data.nextAction ? [projCube.data.nextAction] : []);
+  const text = items[idx] || projCube.data.nextAction || '';
+  if (!text) return;
+  const sp = makeCube('nextstep', e.clientX - cv.getBoundingClientRect().left - 140, e.clientY - cv.getBoundingClientRect().top - 20,
+    300, 110, {text, project:projCube.data.title, folder:projCube.data.folder, pageHref:projCube.data.pageHref});
+  const el = cubeEl(sp);
+  cv.appendChild(el);
+  sp.z = ++deck.z; el.style.zIndex = sp.z;
+  TRAILER.fire('user','sprite pulled from project');
+  TRAILER.fire('ui','spawn sprite · snap-to-grid', true);
+  TRAILER.hold('ui', true);
+  const r = el.getBoundingClientRect();
+  const ox = e.clientX - r.left, oy = e.clientY - r.top;
+  let moved = false;
+  const sx = e.clientX, sy = e.clientY;
+  try{ el.setPointerCapture(e.pointerId); }catch(err){}
+  const mv = ev => {
+    if (!moved && Math.abs(ev.clientX-sx)+Math.abs(ev.clientY-sy) > 4) moved = true;
+    if (moved){
+      sp.x = snapX(clamp(ev.clientX - ox, PAD, cv.clientWidth - CELL));
+      sp.y = snapY(clamp(ev.clientY - oy, PAD, cv.clientHeight - CELL));
+      el.style.left = sp.x+'px'; el.style.top = sp.y+'px';
+      sp.z = ++deck.z; el.style.zIndex = sp.z;
+      TRAILER.hold('state', true);
+    }
+  };
+  const up = ev => {
+    el.removeEventListener('pointermove', mv);
+    el.removeEventListener('pointerup', up);
+    TRAILER.hold('ui', false);
+    TRAILER.hold('state', false);
+    TRAILER.fire('state','sprite placed');
+    if (moved){
+      deck.cubes[sp.id] = sp;
+      deck.order.push(sp.id);
+      handleDrop(sp, ev.clientX, ev.clientY, el);
+    } else {
+      el.remove();
+    }
+    saveSoon();
+  };
+  el.addEventListener('pointermove', mv);
+  el.addEventListener('pointerup', up);
+}
+
+function handleDrop(c, x, y, el){
+  if (el){ el.style.pointerEvents = 'none'; }
+  const tid = dropTarget(x, y, c.id);
+  if (el){ el.style.pointerEvents = ''; }
+  if (!tid) return;
+  const t = deck.cubes[tid];
+  if (!t) return;
+  if (t.kind === 'list' && c.kind === 'nextstep'){
+    joinList(t, c);
+  } else if (t.kind === 'stack'){
+    addToStack(t, c);
+  } else if (t.kind !== 'list' && t.inside){
+    const st = deck.cubes[t.inside];
+    if (st && st.kind === 'stack') addToStack(st, c);
+  } else if (t.kind !== 'list' && !c.inside){
+    dock(t, c);
+  }
+}
+
+function dropTarget(x, y, selfId){
+  const el = document.elementFromPoint(x, y);
+  let node = el;
+  while (node && node !== document.body){
+    if (node.classList && node.classList.contains('cube') && node.dataset.id !== selfId){
+      return node.dataset.id;
+    }
+    node = node.parentNode;
+  }
+  return null;
+}
+
+function joinList(listCube, sp){
+  listCube.items.push({text:sp.data.text, project:sp.data.project, folder:sp.data.folder,
+                       pageHref:sp.data.pageHref, id:sp.id});
+  const i = deck.order.indexOf(sp.id);
+  if (i > -1) deck.order.splice(i,1);
+  delete deck.cubes[sp.id];
+  render();
+  toast('⚡ sprite joined ' + listCube.data.title);
+  TRAILER.fire('state','sprite joined ' + listCube.data.title);
+}
+
+function dock(t, c){
+  const st = makeCube('stack', t.x, t.y, Math.max(t.w, c.w) + 6, Math.max(t.h, c.h) + 46, {title:'STACK'});
+  st.children = [t.id, c.id];
+  st.activeChild = t.id;
+  deck.cubes[st.id] = st;
+  const ti = deck.order.indexOf(t.id);
+  deck.order.splice(ti, 1, st.id);
+  t.inside = st.id;
+  c.inside = st.id;
+  render();
+  toast('🗂 stacked — ' + c.data.title + ' docked into ' + (t.data.title || t.kind));
+  TRAILER.fire('state','stacked');
+}
+
+function addToStack(st, c){
+  if (st.children.includes(c.id)) return;
+  st.children.push(c.id);
+  st.activeChild = c.id;
+  c.inside = st.id;
+  const i = deck.order.indexOf(c.id);
+  if (i > -1) deck.order.splice(i,1);
+  render();
+  toast('🗂 added to stack');
+  TRAILER.fire('state','added to stack');
+}
+
+function popOut(st, childId){
+  const ch = deck.cubes[childId];
+  if (!ch) return;
+  ch.inside = null;
+  ch.x = st.x + 24; ch.y = st.y + 24;
+  deck.order.push(childId);
+  st.children = st.children.filter(id => id !== childId);
+  if (st.children.length === 1){
+    const only = st.children[0];
+    const oc = deck.cubes[only];
+    if (oc){
+      oc.inside = null;
+      oc.x = st.x; oc.y = st.y; oc.w = st.w - 6; oc.h = st.h - 46;
+      const si = deck.order.indexOf(st.id);
+      if (si > -1) deck.order.splice(si, 1, only);
+    }
+    delete deck.cubes[st.id];
+  } else if (!st.children.length){
+    const si = deck.order.indexOf(st.id);
+    if (si > -1) deck.order.splice(si,1);
+    delete deck.cubes[st.id];
+  } else if (st.activeChild === childId){
+    st.activeChild = st.children[st.children.length-1];
+  }
+  render(); saveSoon();
+}
+
+/* ---------------- behavior menu ---------------- */
+function behMenu(e, c){
+  closeMenus();
+  const opts = BEHAVIORS[c.kind] || [];
+  const menu = document.createElement('div');
+  menu.className = 'beh-menu';
+  opts.forEach(([key,label]) => {
+    const b = document.createElement('button');
+    b.className = 'opt' + (c.behavior === key ? ' sel' : '');
+    b.textContent = label;
+    b.addEventListener('click', () => {
+      c.behavior = key;
+      closeMenus(); render(); saveSoon();
+      toast('behavior → ' + key);
+    });
+    menu.appendChild(b);
+  });
+  menu.style.left = Math.min(e.clientX, window.innerWidth - 210) + 'px';
+  menu.style.top = Math.min(e.clientY, window.innerHeight - opts.length*30) + 'px';
+  document.body.appendChild(menu);
+  setTimeout(() => document.addEventListener('pointerdown', closeMenus, {once:true}), 0);
+}
+function closeMenus(){
+  document.querySelectorAll('.beh-menu').forEach(m => m.remove());
+}
+
+/* ---------------- inspector ---------------- */
+function showInspector(c){
+  const b = $('#insp-body');
+  let h = '';
+  if (c.kind === 'project'){
+    const d = c.data;
+    h = '<h2>'+esc(d.title)+'</h2><div class="sub">'+esc(d.folder)+'</div>';
+    h += '<div class="insp-chips">' + laneChip(d.lane) +
+      (d.priority ? '<span class="lane-chip" style="color:'+(d.priority==='1'?'var(--bad)':'var(--warn)')+';border:1px solid var(--line)">P'+esc(d.priority)+'</span>' : '') +
+      (d.revenue ? '<span class="lane-chip" style="color:#fde047;border:1px solid #6b6422">$ revenue</span>' : '') +
+      (d.tags||[]).slice(0,8).map(t=>'<span class="lane-chip" style="color:var(--faint);border:1px solid var(--line)">#'+esc(t)+'</span>').join('') +
+      '</div>';
+    if (d.status) h += '<div class="sec">Status</div><div class="val dim">'+esc(d.status)+'</div>';
+    const items = (d.nextItems&&d.nextItems.length) ? d.nextItems : (d.nextAction ? [d.nextAction] : []);
+    if (items.length){
+      h += '<div class="sec">Next actions</div><ul class="insp-list">' +
+        items.map(t=>'<li>'+esc(t)+'</li>').join('') + '</ul>';
+    }
+    if (d.openQuestions && d.openQuestions.length){
+      h += '<div class="sec">Open questions</div><ul class="insp-list">' +
+        d.openQuestions.slice(0,3).map(q=>'<li>'+esc(q)+'</li>').join('') + '</ul>';
+    }
+    if (d.sessionLog && d.sessionLog.length){
+      h += '<div class="sec">Recent sessions</div><ul class="insp-list">' +
+        d.sessionLog.slice(-3).map(s=>'<li>'+esc(s)+'</li>').join('') + '</ul>';
+    }
+    if (d.pageHref) h += '<div><a class="insp-btn" href="'+esc(d.pageHref)+'" target="_blank">open project page ↗</a></div>';
+  } else if (c.kind === 'nextstep'){
+    const d = c.data;
+    h = '<h2>Next-step sprite</h2><div class="sub">'+esc(c.id)+'</div>';
+    h += '<div class="sec">From project</div><div class="val">'+esc(d.project||'—')+'</div>';
+    h += '<div class="sec">Text</div><div class="val dim">'+esc(d.text||'')+'</div>';
+    h += '<div class="sec">Behavior</div><div class="val">⚡ '+esc(c.behavior)+' — reassign via the chip in its header</div>';
+    if (d.pageHref) h += '<div><a class="insp-btn" href="'+esc(d.pageHref)+'" target="_blank">open project page ↗</a></div>';
+  } else if (c.kind === 'agent'){
+    const d = c.data;
+    h = '<h2>'+esc(d.name)+'</h2><div class="sub">'+esc(d.type||'CLI agent')+'</div>';
+    if (d.provider || d.model){
+      h += '<div class="sec">AICube config</div><div class="val dim">provider: <b>'+esc(d.provider||'custom')+'</b> · model: '+esc(d.model||'—')+'</div>';
+    }
+    h += '<div class="sec">Status</div><div class="val"><span class="ag-dot '+esc(d.status||'unknown')+'" style="display:inline-block;margin-right:6px;vertical-align:middle"></span>'+esc(d.status||'unknown')+(d.lastSeen?' · last seen '+esc(d.lastSeen):'')+'</div>';
+    h += '<div class="sec">Last chat</div><div class="val dim">'+esc(d.chatLoc||'no recent chats')+'</div>';
+    h += '<div class="sec">Queued tasks ('+c.queue.length+')</div><ul class="insp-list">' +
+      (c.queue.length ? c.queue.map(q=>'<li>'+esc(q.text)+' <span style="color:var(--warn)">· '+(q.sent?'sent':'not sent')+'</span></li>').join('') : '<li style="list-style:none;color:var(--faint)">none — assign one from the cube</li>') + '</ul>';
+  } else if (c.kind === 'list'){
+    h = '<h2>'+esc(c.data.title)+'</h2><div class="sub">list sprite · '+c.items.length+' items</div>';
+    h += '<ul class="insp-list">' + (c.items.length ? c.items.map(i=>'<li>'+esc(i.text)+'</li>').join('') : '<li style="list-style:none;color:var(--faint)">empty</li>') + '</ul>';
+  } else if (c.kind === 'write'){
+    const d = c.data;
+    h = '<h2>WRITE — '+esc(d.title||'draft')+'</h2><div class="sub">writing surface · non-destructive</div>';
+    h += '<div class="sec">State</div><div class="val">'+countWords(d.draft)+' words · ';
+    h += d.dirty ? '<span style="color:var(--warn)">unsaved — representation only</span>' : '<span style="color:var(--ok)">saved</span>';
+    h += '</div>';
+    h += '<div class="sec">Rules</div><div class="val dim">Typing never touches the file. Ctrl+S commits to drafts/, Ctrl+E exports to drafts/export/ — the source stays immutable until you say so.</div>';
+  } else if (c.kind === 'drafts'){
+    h = '<h2>PROJECT — drafts</h2><div class="sub">'+((c.data.drafts||[]).length)+' in drafts/</div>';
+    h += '<ul class="insp-list">' + (c.data.drafts||[]).map(dt=>'<li>'+esc(dt.name)+' · '+dt.words+'w</li>').join('') + '</ul>';
+  } else if (c.kind === 'link'){
+    const d = c.data;
+    h = '<h2>'+esc(d.title||'link')+'</h2><div class="sub">link cube · type '+(c.type||'app')+'</div>';
+    if (d.desc) h += '<div class="sec">Description</div><div class="val dim">'+esc(d.desc)+'</div>';
+    h += '<div class="sec">URL</div><div class="val" style="word-break:break-all;font-family:var(--mono);font-size:11px">'+esc(d.url||'')+'</div>';
+    h += '<div class="sec">Behavior</div><div class="val">⚡ '+esc(c.behavior)+' — reassign via the chip or right-click</div>';
+    if (d.url) h += '<div><a class="insp-btn" href="'+esc(d.url)+'" target="_blank">open ↗</a></div>';
+  } else if (c.kind === 'stack'){
+    h = '<h2>Stack</h2><div class="sub">'+c.children.length+' cubes</div>';
+    h += '<ul class="insp-list">' + c.children.map(id=>{
+      const ch = deck.cubes[id];
+      return '<li>'+esc(ch ? (ch.data.title || ch.data.name || ch.kind) : id)+'</li>';
+    }).join('') + '</ul>';
+  } else {
+    h = '<h2>'+esc(c.data.title||c.kind)+'</h2><div class="sub">'+esc(c.id)+'</div><div class="val dim">'+esc(c.data.text||'')+'</div>';
+  }
+  b.innerHTML = h;
+  $('#inspector').classList.remove('hidden');
+}
+
+/* ---------------- misc ---------------- */
+function toast(msg){
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  $('#toasts').appendChild(t);
+  setTimeout(() => { t.classList.add('out'); setTimeout(()=>t.remove(), 450); }, 2400);
+}
+function copyText(s){
+  const done = () => {};
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(s).then(done).catch(()=>fallbackCopy(s));
+  } else fallbackCopy(s);
+}
+function fallbackCopy(s){
+  const ta = document.createElement('textarea');
+  ta.value = s; document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); }catch(e){}
+  ta.remove();
+}
+
+/* ---------------- boot ---------------- */
+function applyPreset(name, force){
+  deck = Object.assign({preset:name, seq:1, z:30, order:[], cubes:{}}, buildPreset(name));
+  document.querySelectorAll('.presets button').forEach(b =>
+    b.classList.toggle('active', b.dataset.preset === name));
+  const modesEl = $('#modes');
+  if (modesEl) modesEl.classList.toggle('hidden', name !== 'writer');
+  document.querySelectorAll('#modes button').forEach(b =>
+    b.classList.toggle('active', b.dataset.mode === 'FLOW'));
+  if (isMini() && name !== 'writer') reflowMini(); else render();
+  saveSoon();
+}
+
+/* ---------------- Mini Me (mobile companion) ---------------- */
+function isMini(){
+  return (window.matchMedia && window.matchMedia('(max-width:820px)').matches) ||
+         /[?#]mini(?:[=&]|$)/i.test(location.search + location.hash);
+}
+function reflowMini(){
+  /* stack top-level cubes vertically, full-width, thumb-reachable */
+  const top = deck.order.map(id => deck.cubes[id]).filter(c => c && !c.inside);
+  const w = Math.max(CELL*2 + GAP, Math.min(520, cv.clientWidth - PAD*2));
+  let y = PAD;
+  top.forEach(c => {
+    c.x = PAD; c.y = y; c.w = w;
+    c.h = Math.max(c.h, 120);
+    y += c.h + GAP;
+  });
+  render();
+}
+
+$('#btn-reset').addEventListener('click', () => {
+  try{ localStorage.removeItem(LS); }catch(e){}
+  applyPreset('focus');
+  toast('layout reset');
+});
+document.querySelectorAll('.presets button').forEach(b =>
+  b.addEventListener('click', () => applyPreset(b.dataset.preset)));
+$('#insp-close').addEventListener('click', () => $('#inspector').classList.add('hidden'));
+document.querySelectorAll('#modes button').forEach(b =>
+  b.addEventListener('click', () => applyWriterMode(b.dataset.mode)));
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape'){ $('#inspector').classList.add('hidden'); closeMenus(); return; }
+  if (deck.preset !== 'writer') return;
+  const k = e.key.toLowerCase();
+  if ((e.ctrlKey || e.metaKey) && k === 's'){ e.preventDefault(); const w = findWriteCube(); if (w) saveDraft(w); }
+  else if ((e.ctrlKey || e.metaKey) && k === 'e'){ e.preventDefault(); const w = findWriteCube(); if (w) exportDraft(w); }
+  else if (e.ctrlKey && /^[1-5]$/.test(e.key)) applyWriterMode(WRITER_MODES[+e.key - 1]);
+});
+
+(function boot(){
+  TRAILER.build();
+  let theme = 'dark';
+  try{ theme = localStorage.getItem('kiss.theme') || 'dark'; }catch(e){}
+  applyTheme(theme);
+  if (restore()){
+    // data refresh happens inside restore(); layouts stay user-owned
+    if (isMini()) reflowMini();
+  } else if (isMini()){
+    applyPreset('agents');       // Mini Me = the AI Coders plate
+  } else {
+    applyPreset('focus');
+  }
+  document.querySelectorAll('.presets button').forEach(b =>
+    b.classList.toggle('active', b.dataset.preset === deck.preset));
+  render();
+  $('#save-state').textContent = 'loaded ✓';
+  $('#btn-add').addEventListener('click', e => addCubeMenu(e));
+  $('#btn-theme').addEventListener('click', () => {
+    applyTheme(document.body.classList.contains('minimal') ? 'dark' : 'minimal');
+  });
+  $('#btn-hist').addEventListener('click', histMenu);
+  $('#btn-commit').addEventListener('click', commitMenu);
+  $('#bridge-state').addEventListener('click', async () => { await checkBridge(); await loadBriefs(); });
+  checkBridge().then(loadBriefs);
+})();
+</script>
+</body>
+</html>

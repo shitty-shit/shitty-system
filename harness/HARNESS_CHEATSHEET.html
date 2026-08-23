@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Harness Cheat Sheet</title>
+<style>
+:root{--ink:#1d2730;--muted:#64717c;--paper:#f4f1ea;--surface:#fffdf8;--line:#d9d2c7;--blue:#245a8d;--teal:#178b83;--orange:#d97831;--red:#b74944;--green:#2f7b47}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:Segoe UI,system-ui,sans-serif;line-height:1.45}.wrap{max-width:1180px;margin:auto;padding:34px 24px 70px}header{padding:25px 0 20px;border-bottom:4px solid var(--orange)}.eyebrow{color:var(--blue);font-size:13px;text-transform:uppercase;letter-spacing:.14em;font-weight:700}h1{font-size:clamp(36px,6vw,72px);line-height:.98;max-width:850px;margin:12px 0}h2{font-size:30px;margin:0 0 12px}h3{font-size:20px;margin:0 0 7px}p{max-width:850px}.lead{font-size:22px;max-width:840px}.stamp{color:var(--muted);font-size:14px}.banner{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}.badge{display:inline-block;padding:6px 10px;border-radius:999px;font-size:13px;font-weight:700;background:#e2f1e7;color:var(--green)}.badge.warn{background:#fff0dc;color:#92571e}.badge.red{background:#f9e1dd;color:#8d3934}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(245px,1fr));gap:16px;margin:18px 0 30px}.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:19px;box-shadow:0 5px 0 rgba(29,39,48,.05)}.panel a{display:block;color:var(--blue);font-weight:600;margin:7px 0;text-decoration:none}.panel a:hover{text-decoration:underline;color:var(--orange)}.panel p{font-size:15px;color:var(--muted);margin:6px 0 0}.flow{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;margin:15px 0 30px}.step{flex:1 1 145px;background:var(--surface);border-left:6px solid var(--blue);padding:15px;border-radius:8px;min-height:105px}.step:nth-child(2){border-left-color:var(--teal)}.step:nth-child(3){border-left-color:var(--orange)}.step:nth-child(4){border-left-color:var(--red)}.arrow{font-size:26px;color:var(--orange);align-self:center}.note{border-left:6px solid var(--orange);padding:14px 18px;background:#fff6e8;max-width:900px}section{margin:32px 0}table{width:100%;border-collapse:collapse;background:var(--surface);font-size:15px}th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{background:#e9e5dc}code{background:#e9e5dc;padding:2px 4px;border-radius:3px;font-family:Consolas,monospace;font-size:.9em}.footer{margin-top:45px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:15px}@media(max-width:680px){.arrow{display:none}table{display:block;overflow:auto}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="eyebrow">LACES_CASES / Freebuff / ShittyShit harness</div>
+  <h1>One front door for the AI work.</h1>
+  <p class="lead">Quick reference for what exists, what it does, where the code lives, how to open the tools, and what still needs verification.</p>
+   <div class="stamp">Status snapshot: 2026-08-19 · Full handoff: <a href="EXECUTIVE_HANDOFF.md">EXECUTIVE_HANDOFF.md</a> · Markdown index: <a href="AI-SYSTEM-CHEAT-SHEET-2026-08-19.md">AI-SYSTEM-CHEAT-SHEET-2026-08-19.md</a></div>
+   <div class="banner"><span class="badge">IJFW verified</span><span class="badge">Bridge tests 3/3</span><span class="badge">Docker stack running</span><span class="badge">LiteLLM inference verified</span><span class="badge warn">AnythingLLM memory open</span></div>
+</header>
+
+<section>
+<h2>Open these first</h2>
+<div class="grid">
+  <div class="panel"><h3>Human overview</h3><a href="http://127.0.0.1:8788/">Live Harness Home</a><a href="EXECUTIVE_HANDOFF.md">Executive handoff</a><a href="HARNESS_EXPLAINER.md">Plain-language harness explainer</a><a href="HARNESS_SYSTEM_SLIDES.html">Visual slide deck</a></div>
+  <div class="panel"><h3>Control surfaces</h3><a href=".state/dash.html">Main dashboard</a><a href=".state/projects/index.html">Project next-steps board</a><a href=".state/kiss/index.html">KISS agent/project deck</a><a href=".state/kiss/slides.html">KISS slides</a></div>
+  <div class="panel"><h3>Graphs and maps</h3><a href="ai-system-explainer/graphify-out/graph.html">AI/Docker system graph</a><a href="ai-system-explainer/graphify-out/GRAPH_REPORT.md">AI/Docker graph report</a><a href="dotmd/graphify-out/graph.html">Broad LACES_CASES graph</a><a href="dotmd/graphify-out/GRAPH_REPORT.md">Broad graph report</a></div>
+  <div class="panel"><h3>Memory</h3><a href="freebuff-memory/ijfw/memory/handoff.md">Latest handoff</a><a href="freebuff-memory/ijfw/memory/knowledge.md">Knowledge / decisions</a><a href="freebuff-memory/ijfw/memory/project-journal.md">Project journal</a><a href="freebuff-memory/README.md">Memory README</a></div>
+</div>
+</section>
+
+<section>
+<h2>How the system works</h2>
+<div class="flow"><div class="step"><h3>1. Chat</h3><p>Freebuff windows are where agents receive work.</p></div><div class="arrow">→</div><div class="step"><h3>2. Work</h3><p>Agents use local files, scripts, models, and services.</p></div><div class="arrow">→</div><div class="step"><h3>3. Remember</h3><p>IJFW stores compact decisions and handoffs.</p></div><div class="arrow">→</div><div class="step"><h3>4. Prove</h3><p>Receipts, tests, renders, and dashboards show what happened.</p></div></div>
+<div class="note"><strong>Operating rule:</strong> a plan or code snippet is not a finished result until a file, render, test, or service response proves it.</div>
+</section>
+
+<section>
+<h2>Local tools and service room</h2>
+<table><thead><tr><th>Tool</th><th>Plain-language job</th><th>Open / inspect</th><th>Status</th></tr></thead><tbody>
+<tr><td>Freebuff</td><td>Agent chat windows and raw conversation source</td><td><code>python .\freebuff-memory\scripts\freebuff_bridge.py threads</code></td><td>VERIFIED database access</td></tr>
+<tr><td>IJFW</td><td>Cross-chat working memory</td><td><a href="freebuff-memory/ijfw/memory/handoff.md">handoff</a> · <a href="freebuff-memory/MEMORY_POLICY.md">policy</a></td><td>VERIFIED</td></tr>
+<tr><td>Open WebUI</td><td>Human-facing local model chat</td><td><a href="http://127.0.0.1:8080">127.0.0.1:8080</a></td><td>VERIFIED HTTP 200 now</td></tr>
+<tr><td>Ollama</td><td>Local model server</td><td><a href="http://127.0.0.1:11434">127.0.0.1:11434</a></td><td>VERIFIED HTTP 200 and models listed</td></tr>
+<tr><td>LiteLLM</td><td>One model-routing gateway</td><td><a href="http://127.0.0.1:4000">127.0.0.1:4000</a></td><td>VERIFIED liveliness HTTP 200</td></tr>
+<tr><td>AnythingLLM</td><td>Workspace and RAG interface</td><td><a href="http://127.0.0.1:3001">127.0.0.1:3001</a></td><td>Memory round trip OPEN</td></tr>
+<tr><td>n8n</td><td>Workflow automation</td><td><a href="http://127.0.0.1:5678">127.0.0.1:5678</a></td><td>VERIFIED HTTP 200 now</td></tr>
+<tr><td>ChromaDB</td><td>Vector search storage option</td><td><a href="http://127.0.0.1:8000">127.0.0.1:8000</a></td><td>VERIFIED heartbeat HTTP 200</td></tr>
+ <tr><td>Unsloth</td><td>Training/model workbench fallback</td><td><code>127.0.0.1:8888</code></td><td>VERIFIED API health; native D-backed</td></tr>
+<tr><td>Dolt</td><td>Versioned SQL registry</td><td><code>127.0.0.1:3307</code></td><td>VERIFIED container running</td></tr>
+</tbody></table>
+<p>Plain-language service docs: <a href="ai-system-explainer/00-plain-language-overview.md">overview</a> · <a href="ai-system-explainer/02-how-the-services-connect.md">connections</a> · <a href="ai-system-explainer/03-current-state-and-gaps.md">gaps</a> · <a href="ai-system-explainer/04-operations-and-safety.md">safe operations</a>.</p>
+</section>
+
+<section>
+<h2>Code index</h2>
+<div class="grid">
+  <div class="panel"><h3>Memory / bridge</h3><a href="freebuff-memory/scripts/freebuff_bridge.py">freebuff_bridge.py</a><a href="freebuff-memory/scripts/verify.ps1">verify.ps1</a><a href="freebuff-memory/tests/test_freebuff_bridge.py">bridge tests</a><p>Inventory chats, render explicit transcripts, publish sanitized handoffs, and verify continuity.</p></div>
+  <div class="panel"><h3>Dashboards / state</h3><a href="harness_home.py">harness_home.py</a><a href=".state/gen_dash.py">gen_dash.py</a><a href=".state/gen_projects_dash.py">gen_projects_dash.py</a><a href=".state/butler.py">butler.py</a><a href=".state/CLOSE-DAY.bat">CLOSE-DAY.bat</a><p>Harness Home reads live evidence; the other scripts generate state views and end-of-day archives.</p></div>
+  <div class="panel"><h3>KISS deck</h3><a href=".state/kiss/gen_kiss.py">gen_kiss.py</a><a href=".state/kiss/bridge.py">bridge.py</a><a href=".state/kiss/sw.js">sw.js</a><p>Agent cubes, project cubes, queues, drafts, commits, and deck persistence.</p></div>
+  <div class="panel"><h3>AI/Docker migration</h3><a href="relocate-ai-docker.ps1">relocate-ai-docker.ps1</a><a href="move-ai-rollback-to-d.ps1">move-ai-rollback-to-d.ps1</a><a href="move-remaining-ai-rollback-to-d.ps1">move-remaining-ai-rollback-to-d.ps1</a><a href="AI-SERVER-MIGRATION-RECEIPT-2026-08-18.md">migration receipt</a><p>Verified copies, junctions, rollback preservation, and storage relocation.</p></div>
+  <div class="panel"><h3>Memory-loop prototype</h3><a href="dotmd/memory-loop/memory.py">memory.py</a><a href="dotmd/memory-loop/mcp_server.py">mcp_server.py</a><a href="dotmd/memory-loop/MEMORY_SPEC.md">MEMORY_SPEC.md</a><a href="dotmd/memory-loop/SETUP.md">SETUP.md</a><p>AnythingLLM/LanceDB semantic memory prototype; not yet the proven hot path.</p></div>
+  <div class="panel"><h3>Graph / LiteLLM</h3><a href="ai-system-explainer/build_graph.py">build_graph.py</a><a href="ai-system-explainer/AI-SYSTEM-EXTRACTION.json">graph facts</a><a href="dotmd/litellm-stack/docker-compose.yml">Compose</a><a href="dotmd/litellm-stack/litellm_config.yaml">routing config</a><p>Build the curated graph and configure the local model gateway.</p></div>
+</div>
+<p>Full code table with every operational script: <a href="EXECUTIVE_HANDOFF.md#complete-operational-code-index">open the executive handoff index</a>.</p>
+</section>
+
+<section>
+<h2>Receipts and evidence</h2>
+<div class="grid">
+  <div class="panel"><h3>Migration</h3><a href="AI-SERVER-MIGRATION-RECEIPT-2026-08-18.md">AI server migration receipt</a><a href="C-DRIVE-AI-DOCKER-MIGRATION-PLAN-2026-08-18.md">C: → D: migration plan</a></div>
+  <div class="panel"><h3>Explanations</h3><a href="ai-system-explainer/graphify-out/GRAPH_REPORT.md">AI/Docker graph report</a><a href="ai-system-explainer/AI-SYSTEM-EXTRACTION.json">curated evidence facts</a><a href="dotmd/graphify-out/GRAPH_REPORT.md">broad ecosystem report</a></div>
+  <div class="panel"><h3>Memory setup</h3><a href="freebuff-memory/receipts/2026-08-16-setup.md">Freebuff memory setup receipt</a><a href="freebuff-memory/ijfw/memory/project-journal.md">journal</a><a href="freebuff-memory/ijfw/memory/knowledge.md">knowledge base</a></div>
+</div>
+</section>
+
+<section>
+<h2>What needs to happen next</h2>
+<ol>
+ <li>Keep Harness Home running when you need a live operational front door: <code>python .\harness_home.py --port 8788</code>.</li>
+<li>Add one artifact receipt per meaningful agent task.</li>
+<li>Prove or retire the AnythingLLM memory-loop prototype.</li>
+<li>Make an explicit decision about Obsidian: live sync or Markdown/graph archive.</li>
+</ol>
+<div class="note"><strong>Bottom line:</strong> the system has real working parts and a documented architecture. The next job is operational visibility and current verification, not more disconnected infrastructure.</div>
+</section>
+<div class="footer">Detailed version: <a href="EXECUTIVE_HANDOFF.md">EXECUTIVE_HANDOFF.md</a>. This page is a navigation surface, not a replacement for the receipts or source code.</div>
+</div>
+</body>
+</html>

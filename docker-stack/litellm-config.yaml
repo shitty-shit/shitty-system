@@ -1,0 +1,25 @@
+# LiteLLM proxy config — unified model routing for LACES_CASES
+# Keys come from .env (ANTHROPIC_API_KEY, OPENAI_API_KEY).
+# Local Ollama models resolve through the compose network. llama.cpp remains a
+# separate native endpoint until container GPU support is proven for this AMD 780M.
+model_list:
+  - model_name: local-qwen
+    litellm_params:
+      model: ollama/qwen2.5:0.5b
+      api_base: http://ollama:11434
+
+  - model_name: local-llamacpp
+    litellm_params:
+      model: openai/qwen2.5-3b-instruct
+      api_base: http://host.docker.internal:8080/v1
+      api_key: none
+
+  - model_name: claude-sonnet
+    litellm_params:
+      model: anthropic/claude-sonnet-4-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  - model_name: gpt-4o
+    litellm_params:
+      model: openai/gpt-4o
+      api_key: os.environ/OPENAI_API_KEY

@@ -1,0 +1,158 @@
+{
+  "schema": 1,
+  "updated_at": "2026-08-19T10:41:57",
+  "goals": {
+    "overall": "LACES_CASES: a working, self-documenting agent stack — KISS/STFU+WRITE shipped, memory loop and litellm proven, every session resumes without context loss.",
+    "today": "Stand up the shared agent-state layer (.state/) so two Freebuff tabs and any CLI agent track the same sessions, tasks, and goals — and the web dashboard survives end-of-day."
+  },
+  "sessions": [
+    {
+      "id": "buff-ijfw-and-state",
+      "tab": "main (this thread)",
+      "agent": "Buffy",
+      "model": "deepseek-v4",
+      "status": "open",
+      "created_at": "2026-08-16T20:00:00",
+      "last_update": "2026-08-18T19:33:48",
+      "task": "Get IJFW working on Windows, write agent handoff, build shared state layer",
+      "accomplished": [
+        "Diagnosed 3 stacked IJFW failures (Windows spawn bug, codex override crash, auth gaps) and reproduced all of them",
+        "Patched ~/.ijfw/mcp-server/src (spawn shell + dropped codex override); backups saved as .bak-winfix",
+        "Proved ijfw cross audit returns real findings on create_skills_spreadsheet.py (codex)",
+        "Wrote A2A_HANDOFF_AGENT.md (complete agent onboarding brief)",
+        "Built .state/ shared session/task layer + web dashboard (this system)",
+        "Built the automated EOD data butler (butler.py + CLOSE-DAY.bat + day brief) so end-of-day prep needs zero remembering",
+        "Built the Project Next-Steps Board: 110 D: ledger projects rendered to a filterable, color-coded web board + one overview page per project",
+        "Rendered every .md in every project folder as a browsable page (839 pages) with a folder sidebar + pager — a browser-native replacement for the local md viewer",
+        "Built the KISS DECK cube prototype (.state/kiss/index.html): sprite model — next-step rows drag out of project cubes, drop on a master list to join; cubes drag/resize/collapse/stack with reassignable ⚡ behavior chips; agent cubes (Freebuff/Codex/Cline/Goose/Claude) with status + last-chat toggles and assign-task queues that copy ready-to-paste briefs; layout persists in localStorage; presets Focus/Agents/Full + Reset",
+        "Aligned the deck to the KISS PRD Phase-1 MVP: grid snapping (1x1/2x1/2x2), color-coded type borders (basic/ai/app/workflow), dbl-click rename, right-click/hold 'make this cube a...' menu, minimal (white) theme, layout version history (last 12)",
+        "Built the AI Coders plate MVP: cubes for Freebuff/Goose/Aionui/Cochat/Codex with status + last-chat toggles, assign-task queues, and a REAL .md inbox repo (python .state/kiss/bridge.py + .state/kiss/inbox/<agent>/ briefs). Sent-from-deck writes a markdown brief, the deck reads it back as 'inbox: N briefs', claim deletes the file. Full loop proven end-to-end in the preview",
+        "Added the + cube menu (AI-coders starter set, searchable project-from-ledger picker, blank cubes) so open cubes can hold project folders; saved PRD.md + MASTER_SYNTHESIS.md into .state/kiss/; AGENTS.md now points every agent at the inbox repo",
+        "Formalized the FRAME principle: deck shell (grid, persistence, menus, bridge) is kind-agnostic; proved repeatability by adding a new kind — link cubes — via the 5-step recipe (feed file -> parser -> renderer -> behaviors -> interactions), with feeds/links.md bullets ({{ROOT}} expansion) becoming open/copy URL cubes",
+        "Absorbed the third canon doc (JOURNEY.md — sonar origin, machine sections, Prototype Zero → Writer first vertical → ecosystem replication, camera-bag community, A2A governance, bug-out repo) and mapped the six Machine Sections onto the actual running code (MACHINE_SECTIONS.md), walking a cube-drag through UI → State → Persistence → Agent layers; serialize() already emits the PRD Cube[] shape",
+        "Saved WHITE_PAPER.md (fourth canon doc) and implemented its governing rule — the Commit gate: Reference ≠ Representation, verified live. New bridge endpoints (GET/POST/DELETE /deck, GET /decks) commit the layout to portable .state/kiss/decks/<name>.json (atomic write); a Commit ▾ toolbar menu names, commits, lists, and loads deck files. Agent cubes now carry AICube provider/model fields from the white paper data model. Sharing section: none → seeded (deck files)",
+        "Stored the canonical Machine Sections data-flow diagram (diagrams/machine-sections-flow.png) and annotated each product station (Drag'n Drop Kit / Zustand / Firestore / share token) with its real prototype binding (startDrag/snap/handleDrop, deck-store + 400ms debounce, localStorage + bridge deck files, portable .json)",
+        "Built the Writer plate — STFU+WRITE Phase 2 (Writer Without AI) — on the frame: Writer preset with the six functional cubes (WRITE/PROJECT/SOURCE/VOICE/EDIT/OUTPUT), five modes (FLOW/FREEWRITE/EDIT/REFERENCE/OUTPUT) that remap the grid like a sonar faceplate (Ctrl+1..5), a real writing surface bound to .md drafts via the bridge (typing = representation only; Ctrl+S saves to drafts/, Ctrl+E exports .md+.txt to drafts/export/ — non-destructive Lightroom rule verified end-to-end: no file until explicit save), word count, PROJECT drafts manager (new/list/open). Fixed two bugs found in testing (writer preset falling into the full-deck branch; draft filename sanitizer stripping .md)",
+        "Built the live machine-sections tracer into the deck: a DATA FLOW panel (USER › UI › STATE › PERSIST › SHARE › AGENT) that lights stations in real time off the actual event flow — drag capture/snap, deck mutations, debounced save + history, deck commit, and inbox brief send/claim — with a live event log line; verified all six stations fire through real paths (drag, save, commit, claim)",
+        "Completed the canon set: located all three diagram-cited sources — A2A HANDOFF ARTIFACT.pdf + kiss_dashboard_scaffolding_spec.pdf (in the 'kiss docs' git repo under SHITTY_SYSTEM HARNESS) and PRD_KISS_Dashboard_v1.0.md (prd_mudroom) — copied into .state/kiss/sources/, PDFs extracted (pdftotext), plus Governance Charter + Strategic Framework. Wrote CANON_RECONCILIATION.md: provenance chain (A2A 2025-10 -> scaffolding -> PRD v1.0 deprecating all -> our PRD.md), v1.0 depth deltas (UI spec / cube states / context menu match our prototype 1:1, testing strategy, responsive 6/4/2-3), and the verdict: scaffolding spec is Phase 4 per v1.0's own gate — our Commit gate is the same doctrine at layout grain; 'kiss docs/' repo + DISCOVERED real project home logged",
+        "Built Writer Phase 4 (AI After the Human): the EDIT·CRITIQUE cube ships a finished draft to an agent inbox as a critique brief (summarize / structure / keyphrases) via bridge /critique; the brief carries the full draft text + requested tasks + the exact return path (critiques/<slug>.md); the returned critique lands back on the deck as a note cube via ▸. Verified the full loop end-to-end in the preview: typed draft → send → inbox/freebuff/*-critique-*.md on disk → agent wrote critiques/draft.md + deleted the brief → refresh showed the return → ▸ landed it as a note cube (critique · draft). Also fixed a render-churn loop (refreshDrafts/refreshCritiques now re-render only when data actually changes, so cube uids stay stable).",
+        "Ported the Coders plate to Android as the Mini Me web app. Touch contract hardened: long-press (550ms) opens the 'make this cube a…' menu (jitter-safe, cancels on >8px move, suppresses native long-press via touch-action/user-select/callout), touch drag + corner resize both verified with synthetic pointer events. Mini Me mode (?mini or <=820px viewport) boots the Coders plate and reflows it into a single full-width thumb-reachable column; canvas scrolls, larger touch targets, full-width inspector. App-build-ready: manifest.json + sw.js (offline-first cache) + icon.svg/.png rendered 192/512, viewport-fit, theme-color, apple meta, and a ?bridge=<LAN ip>:8765 override so the phone can reach the Mothership. ANDROID_BUILD.md documents the Capacitor wrap."
+      ],
+      "next_steps": [
+        "Wrap the Mini Me into a native Android app via Capacitor (steps in .state/kiss/ANDROID_BUILD.md), then the dock/sync handshake to the Mothership bridge",
+        "Writer Phase 5 (STEM-Lite): portable markdown context folders (style/outline/characters/terminology) feeding critique briefs on demand",
+        "A2A protocol into briefs: Plan → Scaffold → Review → Commit → Test stage tracking on the inbox briefs",
+        "AI adapters: route the critique through a live model (cloud/local) instead of the human-agent round-trip",
+        "User: gemini auth login; fix claude API key"
+      ]
+    },
+    {
+      "id": "tab-b-claim-me",
+      "tab": "second Freebuff tab",
+      "agent": "Buffy (other instance)",
+      "model": "unknown",
+      "status": "open",
+      "created_at": "2026-08-16T23:30:00",
+      "last_update": "2026-08-16T23:30:00",
+      "task": "CLAIM ME — replace this placeholder with the real task of the second tab",
+      "accomplished": [
+        "(the other instance fills this in: what it accomplished today)"
+      ],
+      "next_steps": [
+        "(the other instance fills this in: its next steps)",
+        "Then set last_update to now so the dashboard stops flagging it as stale"
+      ],
+      "done": [
+        "Rendered canonical figure 2 — BRIEF DISPATCH data flow (assign-task → .md inbox → claim): hand-drawn SVG (.state/kiss/diagrams/brief-dispatch-flow.svg) in the same six-station grammar as figure 1 (UI/STATE/PERSIST/BRIDGE/AGENT + USER), explicit-commit rule made visible (typing/queueing never touch disk; only the ➤ send writes the brief), return loop claim → loadBriefs() → render(); PNG rendered 2x via headless Chrome (2800×1320). Both figures now cited in MACHINE_SECTIONS.md + STATE.md's canon table.",
+        "Upgraded the live machine-sections tracer from a text pill to an inline SVG of the actual data-flow diagram: USER→UI→STATE→PERSIST with SHARE (commit deck) and AGENT (brief) branching below, arrowed, with the same per-station color-coding as the canonical figures. fire()/hold() call sites unchanged — they now target SVG <g data-s> nodes; verified in preview (all six stations light with exact hue matches #38bdf8/#60a5fa/#fbbf24/#c084fc/#4ade80, transitions settle, unlit = --line). bridge.py restarted (health ok) after Freebuff restart."
+      ]
+    },
+    {
+      "id": "tab-handoff",
+      "tab": "handoff build (Freebuff)",
+      "agent": "Buffy (Freebuff)",
+      "model": "deepseek-v4-flash",
+      "status": "open",
+      "created_at": "2026-08-19T10:10:35",
+      "last_update": "2026-08-19T10:41:57",
+      "task": "Executive handoff: document the whole KISS system for a newcomer",
+      "accomplished": [],
+      "next_steps": [
+        "Review the handoff kit (HANDOFF.md / slides.html / system-map.png) and correct anything that drifted",
+        "Then resume the canon roadmap: Writer Phase 5 (STEM-Lite) → A2A protocol → Android APK → AI adapters"
+      ],
+      "done": [
+        "Executive handoff kit built (2026-08-19): HANDOFF.md (cheat sheet — 60-second story, run commands, file inventory, bridge API table, canon index, diagrams, status/gaps, glossary; every entry links to its file), slides.html (12-slide zero-dependency newcomer deck, keyboard nav, system map embedded as slide 3), diagrams/system-map.svg + rendered PNG (one-picture map: inputs → builders → surfaces → bridge → agent loop → gaps). STATE.md canon table updated. All three verified: SVG well-formed, PNG 1500x940, slides checked in preview.",
+        "Rendered slides.html to slides.pdf (12 pages, one per slide, 16:9, no headers): added a @media print block to the deck (320x180mm pages, chrome hidden, per-slide page-breaks), fixed the map slide selector (nth-child vs nth-of-type — #bar shifted child indices), and disabled the .active fade animation in print (it froze at opacity 0 → blank first page). Verified with pypdf: 12/12 pages carry the right text, valid %PDF-1.4, 912 KB. Bonus: browser Ctrl+P on slides.html now produces the same PDF.",
+        "THE ONE STORE wired (2026-08-19): surveyed the landscape and confirmed D:\\SHITTYSHIT is the canonical central store (git → github.com/shitty-shit/shittyshit, ROUTING convention, conversations drop zone, Central_AI_Vault + laces_cases memory loop named in master index, 7 Docker services running: Dolt/Chroma/AnythingLLM/n8n/Ollama/LiteLLM/OpenWebUI). Built the missing wiring: 00_MASTER/registry.py + REGISTRY.md (1567 files indexed, stdlib, regenerable), first real conversation thread (2026-08-19-kiss-dashboard-and-central-hub.md) + INDEX regenerated, .obsidian vault marker on the master so Obsidian can open it, 00_MASTER/one-store.md doctrine (one store / three views: files, Obsidian, GitHub), KISS HANDOFF.md + slides.pdf deposited into 01_SCHEMA/projects/kiss_dashboard/ per routing, entry contracts updated additively (D:\\SHITTYSHIT\\AGENTS.md load order + dotmd/AGENTS.md One Store section). git status shows the new wiring uncommitted — commit+push awaits explicit approval.",
+        "Adopted the LLM-wiki pattern into the One Store (D:\\SHITTYSHIT\u0000_MASTER\\wiki\\, built 2026-08-19): SCHEMA.md (three-layer contract: immutable sources / LLM-compiled wiki / schema), index.md catalog, greppable log.md, overview synthesis, entities (agents, kiss-dashboard), concepts (machine-sections, one-store, commit-gate), and lint.py — deterministic health check (broken links, orphans, index coverage, ⚠️ contradiction markers for Kevin, missing sources). Lint CLEAN on 9 pages. Deposited the 7 KISS canon docs into 01_SCHEMA/projects/kiss_dashboard/ per ROUTING. Entry contracts updated (D: AGENTS.md + dotmd/AGENTS.md) with the wiki maintenance step. Conversation thread appended, INDEX + REGISTRY regenerated (1592 files). Hardening from the gist thread baked in: provenance on every page, contradictions surfaced not resolved, human edits as pins, index is disposable, union-with-search at scale."
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t-01",
+      "title": "STFU+WRITE Phase 1 Fake KISS cube prototype (render/drag/resize/stack/collapse + save/restore layout)",
+      "status": "todo",
+      "priority": "high",
+      "session": null,
+      "notes": "Recommended next build; full spec in KISS_STFU_WRITE_GSD_MASTER.md"
+    },
+    {
+      "id": "t-02",
+      "title": "Second Freebuff tab: claim session tab-b-claim-me and keep .state/state.json synced",
+      "status": "todo",
+      "priority": "high",
+      "session": "tab-b-claim-me",
+      "notes": "Cross-tab awareness depends on this"
+    },
+    {
+      "id": "t-03",
+      "title": "Prove memory-loop end-to-end against a running AnythingLLM",
+      "status": "todo",
+      "priority": "medium",
+      "session": null,
+      "notes": "Needs AnythingLLM running + API key from user; becomes the semantic recall layer"
+    },
+    {
+      "id": "t-04",
+      "title": "Prove litellm-stack with Docker (gateway + virtual keys)",
+      "status": "todo",
+      "priority": "medium",
+      "session": null,
+      "notes": "Needs Docker running"
+    },
+    {
+      "id": "t-07",
+      "title": "Register the daily butler as a Windows scheduled task (23:45) so EOD prep is fully automatic",
+      "status": "todo",
+      "priority": "high",
+      "session": null,
+      "notes": "User approval needed; schtasks /Create — command drafted, see .state/README.md"
+    },
+    {
+      "id": "t-08",
+      "title": "Fill next actions for the 45 REGISTERED scaffold projects the board flagged as having none",
+      "status": "todo",
+      "priority": "medium",
+      "session": null,
+      "notes": "Real signal from the projects board; could be batched via the ledger NEXT_ACTION.md files"
+    },
+    {
+      "id": "t-05",
+      "title": "gemini auth login (one-time browser flow)",
+      "status": "todo",
+      "priority": "low",
+      "session": null,
+      "notes": "User action; then gemini joins Trident audits"
+    },
+    {
+      "id": "t-06",
+      "title": "Fix claude API key + trim MCP servers in ~/.claude.json",
+      "status": "todo",
+      "priority": "low",
+      "session": null,
+      "notes": "User action; claude currently fails after ~3 min with Invalid API key"
+    }
+  ]
+}

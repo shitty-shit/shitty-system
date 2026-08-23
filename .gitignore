@@ -1,0 +1,63 @@
+# Secrets and environment files
+.env
+.env.*
+*.env
+!docker-stack/.env.example
+!docker-stack/unsloth.env.example
+
+# Databases
+*.db
+*.db-shm
+*.db-wal
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+
+# Node
+node_modules/
+
+# Temp and build artifacts
+.tmp/
+.cache/
+dist/
+build/
+
+# Large binaries
+*.pptx
+*.docx
+*.xlsx
+*.pdf
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.zip
+*.tar.gz
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Freebuff runtime data (read-only bridge source — not repo material)
+.freebuff/
+.ijfw/
+
+# IDE
+.vscode/
+.idea/
+
+# Docker runtime volumes (data lives on D:, not in git)
+docker-stack/dolt/
+docker-stack/n8n/
+
+# Harness state runtime (generated, not source)
+harness/.state/dash.html
+harness/.state/projects/
+harness/.state/kiss/index.html
+harness/.state/kiss/slides.html

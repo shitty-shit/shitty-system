@@ -1,0 +1,562 @@
+{
+  "directed": false,
+  "multigraph": false,
+  "graph": {
+    "hyperedges": [
+      {
+        "id": "shared_ai_service_room",
+        "label": "Shared local AI service room",
+        "nodes": [
+          "docker_desktop",
+          "ollama",
+          "litellm",
+          "open_webui",
+          "n8n",
+          "anythingllm"
+        ],
+        "relation": "form",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1.0,
+        "source_file": "02-how-the-services-connect.md"
+      },
+      {
+        "id": "d_backed_ai_storage",
+        "label": "D-backed AI storage",
+        "nodes": [
+          "d_drive",
+          "ollama_models",
+          "unsloth",
+          "comfyui",
+          "lm_studio",
+          "rollback_copies"
+        ],
+        "relation": "form",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1.0,
+        "source_file": "01-what-was-moved.md"
+      }
+    ]
+  },
+  "nodes": [
+    {
+      "label": "Windows clients",
+      "file_type": "document",
+      "source_file": "00-plain-language-overview.md",
+      "id": "windows_client",
+      "community": 0
+    },
+    {
+      "label": "Docker Desktop",
+      "file_type": "document",
+      "source_file": "02-how-the-services-connect.md",
+      "id": "docker_desktop",
+      "community": 1
+    },
+    {
+      "label": "Docker Compose recipe",
+      "file_type": "document",
+      "source_file": "02-how-the-services-connect.md",
+      "id": "compose_recipe",
+      "community": 1
+    },
+    {
+      "label": "Ollama model server",
+      "file_type": "document",
+      "source_file": "02-how-the-services-connect.md",
+      "id": "ollama",
+      "community": 0
+    },
+    {
+      "label": "Ollama model files",
+      "file_type": "document",
+      "source_file": "01-what-was-moved.md",
+      "id": "ollama_models",
+      "community": 0
+    },
+    {
+      "label": "LiteLLM model gateway",
+      "file_type": "document",
+      "source_file": "02-how-the-services-connect.md",
+      "id": "litellm",
+      "community": 0
+    },
+    {
+      "label": "Open WebUI chat",
+      "file_type": "document",
+      "source_file": "02-how-the-services-connect.md",
+      "id": "open_webui",
+      "community": 0
+    },
+    {
+      "label": "AnythingLLM workspace",
+      "file_type": "document",
+      "source_file": "02-how-the-services-connect.md",
+      "id": "anythingllm",
+      "community": 1
+    },
+    {
+      "label": "n8n automation",
+      "file_type": "document",
+      "source_file": "02-how-the-services-connect.md",
+      "id": "n8n",
+      "community": 0
+    },
+    {
+      "label": "ChromaDB vector store",
+      "file_type": "document",
+      "source_file": "02-how-the-services-connect.md",
+      "id": "chromadb",
+      "community": 1
+    },
+    {
+      "label": "Dolt versioned SQL",
+      "file_type": "document",
+      "source_file": "02-how-the-services-connect.md",
+      "id": "dolt",
+      "community": 1
+    },
+    {
+      "label": "Unsloth training server",
+      "file_type": "document",
+      "source_file": "02-how-the-services-connect.md",
+      "id": "unsloth",
+      "community": 2
+    },
+    {
+      "label": "llama.cpp native path",
+      "file_type": "document",
+      "source_file": "02-how-the-services-connect.md",
+      "id": "llama_cpp",
+      "community": 2
+    },
+    {
+      "label": "ComfyUI",
+      "file_type": "document",
+      "source_file": "03-current-state-and-gaps.md",
+      "id": "comfyui",
+      "community": 3
+    },
+    {
+      "label": "LM Studio",
+      "file_type": "document",
+      "source_file": "03-current-state-and-gaps.md",
+      "id": "lm_studio",
+      "community": 3
+    },
+    {
+      "label": "D: AI and Docker drive",
+      "file_type": "document",
+      "source_file": "01-what-was-moved.md",
+      "id": "d_drive",
+      "community": 3
+    },
+    {
+      "label": "C: to D: migration",
+      "file_type": "document",
+      "source_file": "01-what-was-moved.md",
+      "id": "c_drive_migration",
+      "community": 3
+    },
+    {
+      "label": "Rollback copies",
+      "file_type": "document",
+      "source_file": "01-what-was-moved.md",
+      "id": "rollback_copies",
+      "community": 3
+    },
+    {
+      "label": "Localhost-only boundary",
+      "file_type": "document",
+      "source_file": "04-operations-and-safety.md",
+      "id": "localhost_boundary",
+      "community": 2
+    },
+    {
+      "label": "AMD Radeon 780M",
+      "file_type": "document",
+      "source_file": "03-current-state-and-gaps.md",
+      "id": "amd_780m",
+      "community": 2
+    },
+    {
+      "label": "Freebuff canonical memory",
+      "file_type": "document",
+      "source_file": "03-current-state-and-gaps.md",
+      "id": "freebuff_memory",
+      "community": 1
+    },
+    {
+      "label": "Post-restart runtime state",
+      "file_type": "document",
+      "source_file": "03-current-state-and-gaps.md",
+      "id": "runtime_after_restart",
+      "community": 2
+    }
+  ],
+  "links": [
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "02-how-the-services-connect.md",
+      "weight": 1.0,
+      "_src": "windows_client",
+      "_tgt": "open_webui",
+      "source": "windows_client",
+      "target": "open_webui"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "02-how-the-services-connect.md",
+      "weight": 1.0,
+      "_src": "windows_client",
+      "_tgt": "litellm",
+      "source": "windows_client",
+      "target": "litellm"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "02-how-the-services-connect.md",
+      "weight": 1.0,
+      "_src": "windows_client",
+      "_tgt": "n8n",
+      "source": "windows_client",
+      "target": "n8n"
+    },
+    {
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "02-how-the-services-connect.md",
+      "weight": 1.0,
+      "_src": "compose_recipe",
+      "_tgt": "docker_desktop",
+      "source": "docker_desktop",
+      "target": "compose_recipe"
+    },
+    {
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "02-how-the-services-connect.md",
+      "weight": 1.0,
+      "_src": "docker_desktop",
+      "_tgt": "ollama",
+      "source": "docker_desktop",
+      "target": "ollama"
+    },
+    {
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "02-how-the-services-connect.md",
+      "weight": 1.0,
+      "_src": "docker_desktop",
+      "_tgt": "litellm",
+      "source": "docker_desktop",
+      "target": "litellm"
+    },
+    {
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "02-how-the-services-connect.md",
+      "weight": 1.0,
+      "_src": "docker_desktop",
+      "_tgt": "open_webui",
+      "source": "docker_desktop",
+      "target": "open_webui"
+    },
+    {
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "02-how-the-services-connect.md",
+      "weight": 1.0,
+      "_src": "docker_desktop",
+      "_tgt": "anythingllm",
+      "source": "docker_desktop",
+      "target": "anythingllm"
+    },
+    {
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "02-how-the-services-connect.md",
+      "weight": 1.0,
+      "_src": "docker_desktop",
+      "_tgt": "n8n",
+      "source": "docker_desktop",
+      "target": "n8n"
+    },
+    {
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "02-how-the-services-connect.md",
+      "weight": 1.0,
+      "_src": "docker_desktop",
+      "_tgt": "chromadb",
+      "source": "docker_desktop",
+      "target": "chromadb"
+    },
+    {
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "02-how-the-services-connect.md",
+      "weight": 1.0,
+      "_src": "docker_desktop",
+      "_tgt": "dolt",
+      "source": "docker_desktop",
+      "target": "dolt"
+    },
+    {
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "04-operations-and-safety.md",
+      "weight": 1.0,
+      "_src": "localhost_boundary",
+      "_tgt": "docker_desktop",
+      "source": "docker_desktop",
+      "target": "localhost_boundary"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "03-current-state-and-gaps.md",
+      "weight": 1.0,
+      "_src": "runtime_after_restart",
+      "_tgt": "docker_desktop",
+      "source": "docker_desktop",
+      "target": "runtime_after_restart"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "02-how-the-services-connect.md",
+      "weight": 1.0,
+      "_src": "open_webui",
+      "_tgt": "ollama",
+      "source": "ollama",
+      "target": "open_webui"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "02-how-the-services-connect.md",
+      "weight": 1.0,
+      "_src": "litellm",
+      "_tgt": "ollama",
+      "source": "ollama",
+      "target": "litellm"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "01-what-was-moved.md",
+      "weight": 1.0,
+      "_src": "ollama",
+      "_tgt": "ollama_models",
+      "source": "ollama",
+      "target": "ollama_models"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "01-what-was-moved.md",
+      "weight": 1.0,
+      "_src": "ollama_models",
+      "_tgt": "d_drive",
+      "source": "ollama_models",
+      "target": "d_drive"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "02-how-the-services-connect.md",
+      "weight": 1.0,
+      "_src": "litellm",
+      "_tgt": "anythingllm",
+      "source": "litellm",
+      "target": "anythingllm"
+    },
+    {
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "02-how-the-services-connect.md",
+      "weight": 1.0,
+      "_src": "n8n",
+      "_tgt": "litellm",
+      "source": "litellm",
+      "target": "n8n"
+    },
+    {
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "02-how-the-services-connect.md",
+      "weight": 1.0,
+      "_src": "anythingllm",
+      "_tgt": "chromadb",
+      "source": "anythingllm",
+      "target": "chromadb"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "AMBIGUOUS",
+      "confidence_score": 0.2,
+      "source_file": "03-current-state-and-gaps.md",
+      "weight": 1.0,
+      "_src": "anythingllm",
+      "_tgt": "freebuff_memory",
+      "source": "anythingllm",
+      "target": "freebuff_memory"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "03-current-state-and-gaps.md",
+      "weight": 1.0,
+      "_src": "unsloth",
+      "_tgt": "amd_780m",
+      "source": "unsloth",
+      "target": "amd_780m"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "01-what-was-moved.md",
+      "weight": 1.0,
+      "_src": "unsloth",
+      "_tgt": "d_drive",
+      "source": "unsloth",
+      "target": "d_drive"
+    },
+    {
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "04-operations-and-safety.md",
+      "weight": 1.0,
+      "_src": "localhost_boundary",
+      "_tgt": "unsloth",
+      "source": "unsloth",
+      "target": "localhost_boundary"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "03-current-state-and-gaps.md",
+      "weight": 1.0,
+      "_src": "runtime_after_restart",
+      "_tgt": "unsloth",
+      "source": "unsloth",
+      "target": "runtime_after_restart"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "02-how-the-services-connect.md",
+      "weight": 1.0,
+      "_src": "llama_cpp",
+      "_tgt": "amd_780m",
+      "source": "llama_cpp",
+      "target": "amd_780m"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "01-what-was-moved.md",
+      "weight": 1.0,
+      "_src": "comfyui",
+      "_tgt": "d_drive",
+      "source": "comfyui",
+      "target": "d_drive"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "01-what-was-moved.md",
+      "weight": 1.0,
+      "_src": "lm_studio",
+      "_tgt": "d_drive",
+      "source": "lm_studio",
+      "target": "d_drive"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "01-what-was-moved.md",
+      "weight": 1.0,
+      "_src": "c_drive_migration",
+      "_tgt": "d_drive",
+      "source": "d_drive",
+      "target": "c_drive_migration"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "01-what-was-moved.md",
+      "weight": 1.0,
+      "_src": "c_drive_migration",
+      "_tgt": "rollback_copies",
+      "source": "c_drive_migration",
+      "target": "rollback_copies"
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "shared_ai_service_room",
+      "label": "Shared local AI service room",
+      "nodes": [
+        "docker_desktop",
+        "ollama",
+        "litellm",
+        "open_webui",
+        "n8n",
+        "anythingllm"
+      ],
+      "relation": "form",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "02-how-the-services-connect.md"
+    },
+    {
+      "id": "d_backed_ai_storage",
+      "label": "D-backed AI storage",
+      "nodes": [
+        "d_drive",
+        "ollama_models",
+        "unsloth",
+        "comfyui",
+        "lm_studio",
+        "rollback_copies"
+      ],
+      "relation": "form",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "01-what-was-moved.md"
+    }
+  ]
+}

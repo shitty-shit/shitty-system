@@ -1,0 +1,175 @@
+{
+  "committed": "2026-08-17 18:15:41",
+  "snap": {
+    "v": 1,
+    "preset": "agents",
+    "seq": 1,
+    "z": 30,
+    "order": [
+      "agent-1",
+      "agent-2",
+      "agent-3",
+      "agent-4",
+      "agent-5"
+    ],
+    "cubes": {
+      "agent-1": {
+        "id": "agent-1",
+        "kind": "agent",
+        "x": 14,
+        "y": 14,
+        "w": 262,
+        "h": 262,
+        "collapsed": false,
+        "behavior": "queue",
+        "cfg": {
+          "showStatus": true,
+          "showChat": true,
+          "showQueue": true
+        },
+        "children": [],
+        "activeChild": null,
+        "inside": null,
+        "queue": [],
+        "items": [],
+        "data": {
+          "id": "freebuff",
+          "name": "Freebuff",
+          "type": "CLI agent · this workspace",
+          "provider": "custom",
+          "model": "deepseek-v4 (Freebuff)",
+          "status": "active",
+          "lastSeen": "just now",
+          "chatLoc": "session: Get IJFW working on Windows, write agent handoff, build shared state layer"
+        }
+      },
+      "agent-2": {
+        "id": "agent-2",
+        "kind": "agent",
+        "x": 152,
+        "y": 14,
+        "w": 262,
+        "h": 262,
+        "collapsed": false,
+        "behavior": "queue",
+        "cfg": {
+          "showStatus": true,
+          "showChat": true,
+          "showQueue": true
+        },
+        "children": [],
+        "activeChild": null,
+        "inside": null,
+        "queue": [],
+        "items": [],
+        "data": {
+          "id": "goose",
+          "name": "Goose",
+          "type": "CLI agent · Block",
+          "provider": "custom",
+          "model": "goose cli (config)",
+          "status": "unknown",
+          "lastSeen": "—",
+          "chatLoc": "no recent chats"
+        }
+      },
+      "agent-3": {
+        "id": "agent-3",
+        "kind": "agent",
+        "x": 290,
+        "y": 14,
+        "w": 262,
+        "h": 262,
+        "collapsed": false,
+        "behavior": "queue",
+        "cfg": {
+          "showStatus": true,
+          "showChat": true,
+          "showQueue": true
+        },
+        "children": [],
+        "activeChild": null,
+        "inside": null,
+        "queue": [],
+        "items": [],
+        "data": {
+          "id": "aionui",
+          "name": "Aionui",
+          "type": "CLI agent",
+          "provider": "custom",
+          "model": "—",
+          "status": "unknown",
+          "lastSeen": "—",
+          "chatLoc": "no recent chats"
+        }
+      },
+      "agent-4": {
+        "id": "agent-4",
+        "kind": "agent",
+        "x": 428,
+        "y": 14,
+        "w": 262,
+        "h": 262,
+        "collapsed": false,
+        "behavior": "queue",
+        "cfg": {
+          "showStatus": true,
+          "showChat": true,
+          "showQueue": true
+        },
+        "children": [],
+        "activeChild": null,
+        "inside": null,
+        "queue": [],
+        "items": [],
+        "data": {
+          "id": "cochat",
+          "name": "Cochat",
+          "type": "CLI agent",
+          "provider": "custom",
+          "model": "—",
+          "status": "unknown",
+          "lastSeen": "—",
+          "chatLoc": "no recent chats"
+        }
+      },
+      "agent-5": {
+        "id": "agent-5",
+        "kind": "agent",
+        "x": 566,
+        "y": 14,
+        "w": 262,
+        "h": 262,
+        "collapsed": false,
+        "behavior": "queue",
+        "cfg": {
+          "showStatus": true,
+          "showChat": true,
+          "showQueue": true
+        },
+        "children": [],
+        "activeChild": null,
+        "inside": null,
+        "queue": [
+          {
+            "text": "Tracer test: critique the draft deck",
+            "ts": 1787004939784,
+            "sent": true,
+            "file": "C:\\Users\\idfk\\Desktop\\harness\\.state\\kiss\\inbox\\codex\\20260817-181539-tracer-test-critique-the-draft-deck.md"
+          }
+        ],
+        "items": [],
+        "data": {
+          "id": "codex",
+          "name": "Codex",
+          "type": "CLI agent · OpenAI",
+          "provider": "openai",
+          "model": "codex cli",
+          "status": "active",
+          "lastSeen": "last ijfw audit",
+          "chatLoc": "ijfw Trident audits on this machine"
+        }
+      }
+    }
+  }
+}

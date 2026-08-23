@@ -1,0 +1,13 @@
+# Secrets - NEVER commit
+.env
+*.env
+!.env.example
+
+# Live compose carries a hardcoded secret until Kevin OKs the .env one-liner.
+# Track the sanitized example instead; unignore after the fix.
+docker-compose.yml
+
+# Noise
+__pycache__/
+*.pyc
+Thumbs.db

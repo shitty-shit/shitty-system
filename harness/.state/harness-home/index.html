@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07111f">
+  <title>Harness Home</title>
+  <style>
+    :root {
+      --bg: #07111f;
+      --panel: #0d1b2e;
+      --panel-2: #10243b;
+      --line: #29415f;
+      --text: #ecf5ff;
+      --muted: #9fb3c9;
+      --cyan: #63d7ff;
+      --green: #63e6a4;
+      --yellow: #ffd166;
+      --red: #ff7d8b;
+      --shadow: 0 18px 50px rgba(0, 0, 0, .22);
+    }
+    * { box-sizing: border-box; }
+    html { background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+    body { margin: 0; min-width: 320px; }
+    a { color: var(--cyan); }
+    a:hover { color: #b7efff; }
+    :focus-visible { outline: 3px solid var(--yellow); outline-offset: 3px; }
+    .skip-link { position: absolute; left: 1rem; top: -4rem; padding: .7rem 1rem; background: var(--yellow); color: #111; z-index: 10; }
+    .skip-link:focus { top: 1rem; }
+    .shell { width: min(1500px, calc(100% - 2rem)); margin: 0 auto; }
+    header { border-bottom: 1px solid var(--line); background: linear-gradient(135deg, #07111f 20%, #102946 100%); }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.1rem 0; }
+    .brand { display: flex; align-items: center; gap: .8rem; }
+    .mark { display: grid; place-items: center; width: 2.7rem; height: 2.7rem; border: 1px solid var(--cyan); border-radius: .75rem; color: var(--cyan); font-weight: 800; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { margin-bottom: .15rem; font-size: clamp(1.7rem, 3vw, 2.7rem); letter-spacing: -.03em; }
+    h2 { margin-bottom: .8rem; font-size: 1.25rem; }
+    h3 { margin-bottom: .2rem; font-size: 1rem; }
+    .eyebrow { margin: 0; color: var(--cyan); font-size: .75rem; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
+    .subtle, .meta { color: var(--muted); }
+    .subtle { margin-bottom: 0; }
+    nav { display: flex; flex-wrap: wrap; gap: .6rem; padding: 0 0 1.1rem; }
+    .button, button { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: .55rem .85rem; border: 1px solid var(--line); border-radius: .55rem; background: #132a45; color: var(--text); font: inherit; text-decoration: none; cursor: pointer; }
+    .button:hover, button:hover { background: #1a3b60; color: #fff; }
+    button.primary { border-color: var(--cyan); color: var(--cyan); }
+    main { padding: 1.5rem 0 3rem; }
+    .hero { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: 1.4rem; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
+    .checkline { display: flex; align-items: center; gap: .45rem; min-height: 44px; color: var(--muted); }
+    .checkline input { width: 1.1rem; height: 1.1rem; accent-color: var(--cyan); }
+    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: .8rem; margin-bottom: 1.2rem; }
+    .metric, .panel { border: 1px solid var(--line); background: var(--panel); border-radius: .9rem; box-shadow: var(--shadow); }
+    .metric { padding: 1rem; }
+    .metric strong { display: block; font-size: 1.9rem; line-height: 1.1; }
+    .metric span { color: var(--muted); font-size: .9rem; }
+    .grid { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, .88fr); gap: 1.2rem; align-items: start; }
+    .panel { padding: 1.1rem; overflow: hidden; }
+    .wide { grid-column: 1 / -1; }
+    .panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+    .list { display: grid; gap: .65rem; }
+    .row { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding: .8rem; border: 1px solid #203752; border-radius: .65rem; background: rgba(16, 36, 59, .55); }
+    .row-main { min-width: 0; }
+    .row-main h3, .row-main p { overflow-wrap: anywhere; }
+    .row-main p { margin-bottom: 0; }
+    .status { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; min-width: 6.3rem; padding: .25rem .45rem; border: 1px solid currentColor; border-radius: 99px; font-size: .7rem; font-weight: 800; letter-spacing: .06em; }
+    .status.healthy, .status.current, .status.ok { color: var(--green); }
+    .status.open, .status.degraded { color: var(--yellow); }
+    .status.down, .status.error { color: var(--red); }
+    .status.neutral { color: var(--muted); }
+    .meta { font-size: .82rem; }
+    .code { display: block; margin: .7rem 0 0; padding: .7rem; overflow-x: auto; border-radius: .55rem; background: #06101d; color: #cde8ff; font: .83rem/1.45 ui-monospace, SFMono-Regular, Consolas, monospace; }
+    .handoff { max-height: 350px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; padding: 1rem; border: 1px solid #203752; border-radius: .65rem; background: #081625; color: #cfe2f7; font: .86rem/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; }
+    .empty { padding: 1rem; border: 1px dashed var(--line); border-radius: .6rem; color: var(--muted); }
+    footer { padding: 1.5rem 0 3rem; border-top: 1px solid var(--line); color: var(--muted); }
+    .legend { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: .7rem; font-size: .83rem; }
+    .legend span { display: inline-flex; align-items: center; gap: .35rem; }
+    .dot { width: .65rem; height: .65rem; border-radius: 50%; background: currentColor; }
+    @media (max-width: 900px) { .metrics { grid-template-columns: repeat(2, 1fr); } .grid { grid-template-columns: 1fr; } .wide { grid-column: auto; } }
+    @media (max-width: 600px) { .shell { width: min(100% - 1rem, 1500px); } .topbar, .hero { align-items: flex-start; flex-direction: column; } .metrics { gap: .55rem; } .metric { padding: .8rem; } .metric strong { font-size: 1.5rem; } .row { flex-direction: column; gap: .6rem; } .status { align-self: flex-start; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <header>
+    <div class="shell">
+      <div class="topbar">
+        <div class="brand"><div class="mark" aria-hidden="true">H</div><div><p class="eyebrow">LACES_CASES / local operator console</p><h1>Harness Home</h1></div></div>
+        <div id="update-status" class="meta" role="status" aria-live="polite">Loading live snapshot…</div>
+      </div>
+      <nav aria-label="Primary">
+        <a class="button" href="/HARNESS_CHEATSHEET.html">Cheat sheet</a>
+        <a class="button" href="/EXECUTIVE_HANDOFF.md">Executive handoff</a>
+        <a class="button" href="/HARNESS_SYSTEM_SLIDES.html">System slides</a>
+        <a class="button" href="/.state/dash.html">State dashboard</a>
+        <a class="button" href="/.state/kiss/index.html">KISS deck</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="shell">
+    <section class="hero" aria-labelledby="welcome-title">
+      <div><p class="eyebrow">One place to see what is real</p><h2 id="welcome-title">Live system picture</h2><p class="subtle">This page reads current local evidence. It does not modify services, memory, threads, or files.</p></div>
+      <div class="hero-actions"><label class="checkline"><input id="auto-refresh" type="checkbox" checked> Refresh every 30 seconds</label><button id="refresh" class="primary" type="button">Refresh now</button></div>
+    </section>
+
+    <section class="metrics" aria-label="System summary">
+      <div class="metric"><strong id="metric-services">—</strong><span>services healthy</span></div>
+      <div class="metric"><strong id="metric-threads">—</strong><span>agent threads found</span></div>
+      <div class="metric"><strong id="metric-artifacts">—</strong><span>recent artifacts</span></div>
+      <div class="metric"><strong id="metric-blockers">—</strong><span>open decisions / blockers</span></div>
+    </section>
+
+    <div class="grid">
+      <section class="panel wide" aria-labelledby="health-title"><div class="panel-head"><h2 id="health-title">Service health</h2><span id="health-checked" class="meta">Not checked</span></div><div id="health-list" class="list"><div class="empty">Loading probes…</div></div><div class="legend" aria-label="Status legend"><span class="healthy"><i class="dot" aria-hidden="true"></i> HEALTHY means a live probe responded</span><span class="open"><i class="dot" aria-hidden="true"></i> DOWN means no live response</span></div></section>
+
+      <section class="panel" aria-labelledby="threads-title"><div class="panel-head"><h2 id="threads-title">Active agent threads</h2><a href="/freebuff-memory/scripts/freebuff_bridge.py">bridge code</a></div><div id="thread-list" class="list"><div class="empty">Loading Freebuff threads…</div></div></section>
+
+      <section class="panel" aria-labelledby="handoff-title"><div class="panel-head"><h2 id="handoff-title">Latest handoff</h2><a id="handoff-link" href="/freebuff-memory/ijfw/memory/handoff.md">source file</a></div><p id="handoff-meta" class="meta">Loading IJFW handoff…</p><pre id="handoff-content" class="handoff">Loading…</pre></section>
+
+      <section class="panel" aria-labelledby="blockers-title"><div class="panel-head"><h2 id="blockers-title">Blockers and open decisions</h2><a href="/ai-system-explainer/03-current-state-and-gaps.md">gap register</a></div><div id="blocker-list" class="list"><div class="empty">Loading gap register…</div></div></section>
+
+      <section class="panel" aria-labelledby="artifacts-title"><div class="panel-head"><h2 id="artifacts-title">Recent artifacts</h2><span id="artifact-total" class="meta">Loading…</span></div><div id="artifact-list" class="list"><div class="empty">Scanning workspace…</div></div></section>
+
+      <section class="panel wide" aria-labelledby="operate-title"><h2 id="operate-title">Operator shortcuts</h2><p class="subtle">Run these from <code>C:\Users\idfk\Desktop\harness</code> when you need the underlying evidence.</p><code class="code">python .\harness_home.py --port 8787
+docker compose -f D:\Docker\stack\docker-compose.yml ps
+python .\freebuff-memory\scripts\freebuff_bridge.py threads
+powershell -ExecutionPolicy Bypass -File .\freebuff-memory\scripts\verify.ps1</code></section>
+    </div>
+  </main>
+
+  <footer><div class="shell"><p>Harness Home is a read-only local view. Raw Freebuff SQLite remains authoritative; IJFW handoff is the current cross-chat summary; the files linked above are the durable record.</p><p id="footer-state" class="meta">Waiting for first snapshot.</p></div></footer>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const text = (node, value) => { node.textContent = value == null ? "—" : String(value); };
+    const safeDate = (value) => { if (!value) return "unknown time"; const date = new Date(value); return Number.isNaN(date.getTime()) ? value : date.toLocaleString(); };
+    const statusClass = (value) => String(value || "neutral").toLowerCase().replace(/[^a-z]/g, "");
+    const statusBadge = (value) => { const span = document.createElement("span"); span.className = `status ${statusClass(value)}`; span.textContent = value || "UNKNOWN"; return span; };
+    const link = (href, label) => { const a = document.createElement("a"); a.href = href || "#"; a.textContent = label; return a; };
+    const row = (title, detail, meta, badge, href) => {
+      const article = document.createElement("article"); article.className = "row";
+      const main = document.createElement("div"); main.className = "row-main";
+      const heading = document.createElement("h3");
+      if (href) heading.append(link(href, title)); else heading.textContent = title;
+      main.append(heading);
+      if (detail) { const p = document.createElement("p"); p.className = "subtle"; p.textContent = detail; main.append(p); }
+      if (meta) { const p = document.createElement("p"); p.className = "meta"; p.textContent = meta; main.append(p); }
+      article.append(main); if (badge) article.append(statusBadge(badge)); return article;
+    };
+    const fill = (node, children) => { node.replaceChildren(...children); if (!children.length) { const empty = document.createElement("div"); empty.className = "empty"; empty.textContent = "Nothing recorded."; node.append(empty); } };
+
+    function renderHealth(data) {
+      text($("metric-services"), `${data.healthy}/${data.total}`); text($("health-checked"), `Checked ${safeDate(data.checked_at)}`);
+      const nodes = data.services.map((service) => row(service.name, `${service.kind} · ${service.detail}`, `${service.url} · ${service.container_status || "container status unavailable"}${service.latency_ms == null ? "" : ` · ${service.latency_ms} ms`}`, service.status));
+      fill($("health-list"), nodes);
+    }
+    function renderThreads(data) {
+      const threads = data.threads || []; text($("metric-threads"), threads.length);
+      const nodes = threads.slice(0, 12).map((thread) => row(thread.title || "Untitled thread", `${thread.harness_id || thread.harness || "unknown harness"} · ${thread.model || "model not recorded"}`, `${thread.message_count || 0} messages · updated ${safeDate(thread.updated_at)}`, thread.status || "OPEN"));
+      if (data.status === "ERROR") { const empty = document.createElement("div"); empty.className = "empty"; empty.textContent = `Freebuff bridge unavailable: ${data.error}`; fill($("thread-list"), [empty]); return; }
+      fill($("thread-list"), nodes);
+    }
+    function renderHandoff(data) { $("handoff-link").href = data.source || "#"; text($("handoff-meta"), `${data.status || "UNKNOWN"} · updated ${safeDate(data.updated_at)}`); text($("handoff-content"), data.content || "No handoff content."); }
+    function renderBlockers(data) {
+      const items = data.items || []; text($("metric-blockers"), items.length);
+      const nodes = items.map((item) => row(item.title, item.detail, item.source ? `Source: ${item.source}` : "", item.severity, item.source)); fill($("blocker-list"), nodes);
+    }
+    function renderArtifacts(data) {
+      text($("metric-artifacts"), data.items ? data.items.length : 0); text($("artifact-total"), `${data.items ? data.items.length : 0} shown`);
+      const nodes = (data.items || []).slice(0, 18).map((item) => row(item.name, item.path, `${item.extension.toUpperCase()} · ${Math.max(1, Math.round(item.size / 1024))} KB · ${safeDate(item.updated_at)}`, null, item.href)); fill($("artifact-list"), nodes);
+    }
+    async function refresh() {
+      text($("update-status"), "Refreshing live snapshot…");
+      try {
+        const response = await fetch("/api/snapshot", { cache: "no-store" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        renderHealth(data.health); renderThreads(data.threads); renderHandoff(data.handoff); renderBlockers(data.blockers); renderArtifacts(data.artifacts);
+        text($("footer-state"), `Snapshot generated ${safeDate(data.generated_at)} · state file ${data.state && data.state.status === "OK" ? "read" : "unavailable"}`);
+        text($("update-status"), `Updated ${safeDate(data.generated_at)}`);
+      } catch (error) { text($("update-status"), `Refresh failed: ${error.message}`); text($("footer-state"), "The page is still available, but the live API did not respond."); }
+    }
+    $("refresh").addEventListener("click", refresh);
+    setInterval(() => { if ($("auto-refresh").checked) refresh(); }, 30000);
+    refresh();
+  </script>
+</body>
+</html>

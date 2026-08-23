@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kevin's AI Harness — System Explainer</title>
+<style>
+  :root { --ink:#17212b; --muted:#607080; --paper:#f6f3ed; --card:#fffdf8; --blue:#245a8d; --teal:#168f87; --orange:#d97732; --red:#b94b47; --line:#d8d2c7; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#d8d4cc; color:var(--ink); font-family:Segoe UI, system-ui, sans-serif; }
+  .deck { width:min(1180px,100%); margin:0 auto; }
+  section { min-height:100vh; padding:7vw 8vw; display:flex; flex-direction:column; justify-content:center; background:var(--paper); border-bottom:8px solid #d8d4cc; }
+  .kicker { color:var(--blue); text-transform:uppercase; letter-spacing:.14em; font-weight:700; font-size:clamp(12px,1.4vw,17px); }
+  h1 { font-size:clamp(44px,7vw,88px); line-height:.98; margin:.25em 0 .3em; max-width:900px; }
+  h2 { font-size:clamp(32px,4.5vw,58px); line-height:1.03; margin:0 0 .45em; max-width:900px; }
+  h3 { font-size:clamp(20px,2.2vw,30px); margin:.4em 0; }
+  p, li { font-size:clamp(18px,2vw,26px); line-height:1.42; max-width:900px; }
+  .small { color:var(--muted); font-size:clamp(15px,1.4vw,19px); }
+  .rule { width:120px; height:8px; background:var(--orange); margin:1.4em 0; }
+  .diagram { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; align-items:center; margin:1.5em 0; max-width:1000px; }
+  .node { background:var(--card); border:2px solid var(--line); border-radius:16px; padding:18px; min-height:110px; display:flex; flex-direction:column; justify-content:center; box-shadow:0 8px 0 rgba(23,33,43,.06); }
+  .node strong { font-size:clamp(17px,1.7vw,23px); }
+  .node span { color:var(--muted); font-size:clamp(14px,1.35vw,18px); margin-top:7px; }
+  .arrow { text-align:center; color:var(--orange); font-size:34px; font-weight:700; }
+  .layers { display:grid; grid-template-columns:1fr 1fr; gap:18px; max-width:1000px; }
+  .layer { padding:22px; background:var(--card); border-left:8px solid var(--blue); border-radius:12px; }
+  .layer:nth-child(2){border-left-color:var(--teal)} .layer:nth-child(3){border-left-color:var(--orange)} .layer:nth-child(4){border-left-color:var(--red)}
+  .layer p { font-size:18px; margin:.2em 0 0; }
+  .columns { display:grid; grid-template-columns:1fr 1fr; gap:40px; max-width:1000px; }
+  .columns ul { margin-top:.2em; padding-left:1.2em; }
+  .status { display:inline-block; padding:8px 14px; border-radius:999px; background:#e5f4e9; color:#27693d; font-size:16px; font-weight:700; margin:.2em .4em .2em 0; }
+  .status.warn { background:#fff0dc; color:#92571e; } .status.red { background:#fde5e1; color:#8f3530; }
+  .quote { border-left:8px solid var(--orange); padding:20px 28px; background:#fff8ec; max-width:900px; font-size:clamp(23px,3vw,38px); line-height:1.2; }
+  code { font-family:Consolas,monospace; font-size:.8em; background:#ebe7df; padding:.1em .25em; border-radius:4px; }
+  footer { position:fixed; bottom:14px; right:18px; color:#4e5963; font-size:13px; background:rgba(246,243,237,.86); padding:6px 9px; border-radius:6px; }
+  @media (max-width:760px){ section{padding:14vw 7vw; min-height:auto; } .diagram,.layers,.columns{grid-template-columns:1fr;}.arrow{transform:rotate(90deg);}.node{min-height:82px;} }
+  @media print { body{background:white;} section{min-height:100vh; page-break-after:always; border:0;} footer{display:none;} }
+</style>
+</head>
+<body>
+<main class="deck">
+  <section>
+    <div class="kicker">Kevin's AI harness · plain-language guide</div>
+    <h1>This is a control room for AI work.</h1>
+    <div class="rule"></div>
+    <p>It lets several AI workers use local files, local models, memory, automation, and shared project state.</p>
+    <p class="small">The important truth: it is powerful, but its parts need one clearer front door.</p>
+  </section>
+
+  <section>
+    <div class="kicker">The basic flow</div>
+    <h2>A chat becomes useful when it leaves a trace.</h2>
+    <div class="diagram">
+      <div class="node"><strong>1 · Ask</strong><span>Kevin gives an agent a job</span></div><div class="arrow">→</div>
+      <div class="node"><strong>2 · Work</strong><span>The agent reads tools and files</span></div><div class="arrow">→</div>
+      <div class="node"><strong>3 · Leave proof</strong><span>Files, tests, renders, or a receipt</span></div>
+    </div>
+    <p class="quote">A plan is not a result. A result is something you can open, run, inspect, or verify.</p>
+  </section>
+
+  <section>
+    <div class="kicker">The four memory layers</div>
+    <h2>There is not one “AI database.” Each layer has a different job.</h2>
+    <div class="layers">
+      <div class="layer"><h3>Raw chat evidence</h3><p>Freebuff's SQLite database. This is what was actually said.</p></div>
+      <div class="layer"><h3>IJFW working memory</h3><p>Short handoffs, decisions, and patterns for the next chat.</p></div>
+      <div class="layer"><h3>Operational state</h3><p><code>.state/state.json</code> tracks sessions, goals, and tasks.</p></div>
+      <div class="layer"><h3>Semantic memory prototype</h3><p>AnythingLLM/LanceDB is designed for searchable long-term recall, but is not yet fully proven.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="kicker">What is already real</div>
+    <h2>The harness has produced interfaces, diagrams, memory tools, and migration receipts.</h2>
+    <div class="columns">
+      <div><h3>Human-facing outputs</h3><ul><li>KISS agent deck</li><li>Project next-steps board</li><li>Writer surface</li><li>SVG and PNG diagrams</li><li>Graphify HTML graph</li></ul></div>
+      <div><h3>Operational outputs</h3><ul><li>Freebuff-to-IJFW bridge</li><li>Memory policy and handoffs</li><li>AI/Docker migration plan</li><li>Migration receipt with rollback</li><li>Tests and verification scripts</li></ul></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="kicker">What the work has been</div>
+    <h2>The agents have been building the operating system around the AI.</h2>
+    <div class="columns">
+      <div><h3>Memory</h3><p>Created shared handoffs so a new chat can resume without replaying every transcript.</p><h3>State</h3><p>Created a dashboard, project board, queues, and a shared task/session file.</p></div>
+      <div><h3>Local infrastructure</h3><p>Moved AI and Docker data toward D:, preserving rollback copies and verifying copies before junctioning.</p><h3>Orientation</h3><p>This documentation pass separates verified facts from plans and stale claims.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="kicker">Status on 2026-08-19</div>
+    <h2>Some important pieces pass. Some need to be restarted or proven again.</h2>
+    <p><span class="status">IJFW bridge verified</span><span class="status">3/3 bridge tests pass</span><span class="status">Chat database readable</span></p>
+    <p><span class="status warn">Docker daemon not reachable after restart</span><span class="status warn">AnythingLLM search not proven</span><span class="status red">No single live Harness Home</span></p>
+    <p class="small">The migration receipt records what worked on August 18. Today’s service check must be rerun after Docker recovery.</p>
+  </section>
+
+  <section>
+    <div class="kicker">How Kevin uses it</div>
+    <h2>Start with the dashboard, then follow the handoff.</h2>
+    <div class="diagram">
+      <div class="node"><strong>Open</strong><span><code>.state/dash.html</code></span></div><div class="arrow">→</div>
+      <div class="node"><strong>Read</strong><span><code>handoff.md</code> and <code>knowledge.md</code></span></div><div class="arrow">→</div>
+      <div class="node"><strong>Inspect</strong><span>List threads and outputs</span></div>
+    </div>
+    <p>Every agent should finish by naming the files changed, the output that materialized, the tests run, the blockers, and the next action.</p>
+  </section>
+
+  <section>
+    <div class="kicker">The next milestone</div>
+    <h2>Build one front door for the whole harness.</h2>
+    <p>A “Harness Home” should show service health, active threads, the latest handoff, recent artifact receipts, blockers, and links to the dashboards and graphs.</p>
+    <div class="rule"></div>
+    <p class="quote">The goal is not more infrastructure. The goal is being able to see what the infrastructure did.</p>
+    <p class="small">Source guide: HARNESS_EXPLAINER.md · evidence checked against local files and verification commands.</p>
+  </section>
+</main>
+<footer>Use PageUp / PageDown or scroll · Print to PDF if needed</footer>
+</body>
+</html>

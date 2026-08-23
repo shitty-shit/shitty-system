@@ -1,0 +1,167 @@
+KISS Dashboard: Project Scaffolding & File
+Management System -- Feature
+Specification
+
+1. Overview
+
+This document outlines the feature specification for a core module of the KISS Dashboard,
+focusing on its project scaffolding and file management capabilities. The system is
+designed to provide users with a powerful, intuitive, and non-destructive method for
+creating new projects from templates, reorganizing existing file structures, and managing
+large-scale file operations. Inspired by NotebookLM's source/operation/output pattern and
+Lightroom's non-destructive editing model, the system operates on a sandbox principle: no
+files are moved or modified until the user explicitly approves the proposed changes.
+
+2. The Three-Panel Interface
+
+The user interface is structured around a three-panel layout, each dedicated to a distinct
+stage of the file management and scaffolding workflow:
+
+2.1. Left Panel -- SOURCES
+
+This panel is dedicated to loading and managing raw material. Sources are represented as
+lightweight metadata previews, not the actual files themselves, ensuring that original data
+remains untouched during the planning phase. These previews include essential
+information such as file name, size, type, a content snippet, and the current location.
+Key Features:
+Users can load various forms of raw material, including individual files, entire folders, Ghost
+Drive dumps, chat log exports, and other unsorted content. The system works exclusively
+with metadata previews, ensuring that original source files are never altered or moved
+during the planning and preview stages. Multiple source locations are supported
+simultaneously, including local drives, Google Drive, Dropbox, external drives, and direct
+clipboard/paste operations.
+
+2.2. Middle Panel -- OPERATIONS
+
+This central panel is where users define and apply operations to the loaded sources. It
+provides a flexible environment for scaffolding new projects, reorganizing existing
+structures, and classifying content using AI-driven suggestions.
+Key Features:
+Users can apply predefined templates via natural language commands or menu selections.
+For instance, "template video" scaffolds a new project optimized for video content, "template
+photography" tailors a project for photography assets, and "template coding" sets up a coding
+project, with optional GitHub integration. The "restructure" command leverages AI to
+analyze messy existing folders and propose reorganizations based on established templates
+and best practices. Similarly, the "classify" command enables AI to sort unsorted files into
+proposed project and folder destinations, significantly reducing manual effort. The
+"merge" command allows combining content from multiple source folders into a unified
+structure. Users can toggle specific template components on or off, including base "railroad
+tracks" folders, type-specific extensions, distribution channels, and system/operations
+folders. Furthermore, the proposed structure can be customized through direct
+manipulation or natural language commands, such as "add a CHARACTERS folder" , "remove
+MUSIC folder" , or "route this to the Politics vertical" .
+
+2.3. Right Panel -- OUTPUT / PREVIEW
+
+This panel provides a comprehensive, real-time preview of the proposed changes before
+any modifications are executed. It offers transparency and control, allowing users to
+visualize the impact of their operations.
+Key Features:
+This panel displays the entire target file structure and content routing as it would appear
+after execution. A visual diff presents a side-by-side comparison or highlighted differences
+between the current state of the file system and the proposed new state. The system clearly
+indicates where each source file will be placed within the new structure (file-by-file
+routing). It also highlights any new, empty folders that will be generated and identifies files
+and folders that would be deleted, accompanied by prominent warnings to prevent
+accidental data loss.
+
+3P.aTttheernS)andbox / Non-Destructive Model (Lightroom
+
+At the core of this system is a non-destructive sandbox model, inspired by Adobe
+Lightroom's approach to photo editing. This ensures data safety and flexibility throughout
+the planning process.
+All operations are performed on lightweight metadata previews rather than directly on
+original files, ensuring that actual files remain untouched until explicit user approval. All
+proposed changes are constructed and managed within a virtual staging area, an isolated
+environment that allows for experimentation and iteration without affecting the live file
+system. Staging plans can be saved, revisited, and modified across multiple sessions,
+enabling complex reorganizations to be developed incrementally. Users can also maintain
+multiple distinct staging plans simultaneously (e.g., "reorganize Ghost Drive 1" and
+"scaffold new project"), each in its own state of progress.
+
+4. Review & Approval Workflow
+
+Before any changes are committed to the file system, the system provides a robust review
+and approval workflow, offering granular control over the execution process.
+The system offers a preview diff, providing a side-by-side comparison of the current file
+system state versus the proposed state for detailed visual review. Users have several
+options for handling original files: Keep Originals (copy files to new locations, leave originals
+in place), Move Originals (relocate files, remove from old location), or Archive Originals (move
+originals to a dated archive folder, e.g., _ARCHIVE/2026-03-06/ , before restructuring). A Dry
+Run option executes the proposed plan as a log only, generating a complete manifest of
+what would happen without performing any actual file system modifications, which is
+invaluable for validation. For approval, users can Selective Approve individual file moves or
+folder creations, reject others, or hold specific items for later review, or Batch Approve all
+proposed changes at once, initiating the execution phase.
+
+5. Execution & Rollback
+
+Upon user approval, a dedicated bot executes the approved plan. The system is designed
+with robust rollback capabilities to ensure data integrity and recovery.
+Upon user approval, a specialized bot executes the approved file operations, ensuring
+consistency and efficiency. For every execution, a comprehensive Rollback Manifest is
+generated, which is a complete record of every operation performed, including source path,
+destination path, operation type, and timestamp. This manifest is securely stored within
+the project's _SYSTEM/ folder, ensuring its availability for future reference or recovery. The
+system supports a one-click rollback feature, allowing users to undo the entire operation
+using the generated manifest, reverting the file system to its state prior to execution.
+Execution can be paused mid-operation, and a progress indicator displays the completion
+percentage and the current file being processed, providing real-time feedback.
+
+6. Template System
+
+The template system is foundational to the scaffolding capabilities, enabling rapid and
+consistent project setup and organization.
+The system automatically applies the standard "railroad tracks" folder structure to every
+new project as a base template, ensuring foundational consistency. Type extension
+templates (e.g., Video , Photography , Coding , Writing , Music , Platform/SaaS , Merch/Brand ,
+Documentary , Satire/Comedy ) extend this base structure with folders specific to different
+project types. A distribution template provides a comprehensive list of all available
+channels and verticals, allowing users to toggle distribution for each channel on or off. A
+system/ops template is always applied, creating the _SYSTEM/ folder containing essential
+operational documents such as status.md , changelog.md , agent_log.md , and
+dependencies.md . All templates are versioned and stored centrally in the 00_CORE/templates/
+directory, ensuring consistency and easy management. Users also have the ability to create
+custom templates and share them within the ecosystem, fostering community
+contributions and specialized workflows.
+
+7. System-Wide Sweep Integration
+
+The KISS Dashboard's scaffolding and file management system is deeply integrated with
+the broader ecosystem's system-wide sweep capabilities. This allows for powerful cross-
+project analysis and batch operations.
+The dashboard can operate in a "sweep mode," enabling queries across all 23 projects
+simultaneously. Cross-project query examples include: "show me */STATUS/status.md from
+every project" (retrieves status documents from all projects), "show me all */_MUDROOM/
+contents" (gathers all unsorted material across the entire ecosystem), and "show me all
+*/DISTRIBUTION/ configs" (displays distribution configurations for every project). The results
+of these system-wide sweeps are presented in the Left Panel (SOURCES), allowing users to
+perform batch operations on aggregated data from across the entire ecosystem.
+
+8. Command Examples
+
+The following table provides examples of natural language commands and their
+corresponding actions within the KISS Dashboard's scaffolding and file management
+system:
+
+Command                                    Action
+                                           Creates a new project folder
+ "new project Server Room template video"   PROJ_02_SERVER_ROOM and applies the video
+ "restructure /Ghost_Drive_01/"            type extension template.
+ "classify mudroom global"                 AI analyzes the specified messy folder and
+                                           proposes a reorganized structure based on
+                                           templates.
+                                           AI sorts the contents of _MUDROOM_GLOBAL/
+                                           into appropriate project and subfolders.
+"sweep status all"                Pulls all status.md documents from every
+"template add CHARACTERS"         project across the ecosystem.
+"distribution toggle youtube on"  Adds a new custom folder named CHARACTERS/
+"dry run"                         to the current project's proposed structure.
+"rollback last"                   Enables YouTube as a distribution channel in
+                                  the current project's distribution configuration.
+                                  Generates a complete manifest of proposed
+                                  changes without executing any file system
+                                  modifications.
+                                  Undoes the most recent executed operation
+                                  using its generated Rollback Manifest.
+

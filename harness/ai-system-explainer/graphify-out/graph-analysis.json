@@ -1,0 +1,186 @@
+{
+  "communities": {
+    "0": [
+      "litellm",
+      "n8n",
+      "ollama",
+      "ollama_models",
+      "open_webui",
+      "windows_client"
+    ],
+    "1": [
+      "anythingllm",
+      "chromadb",
+      "compose_recipe",
+      "docker_desktop",
+      "dolt",
+      "freebuff_memory"
+    ],
+    "2": [
+      "amd_780m",
+      "llama_cpp",
+      "localhost_boundary",
+      "runtime_after_restart",
+      "unsloth"
+    ],
+    "3": [
+      "c_drive_migration",
+      "comfyui",
+      "d_drive",
+      "lm_studio",
+      "rollback_copies"
+    ]
+  },
+  "cohesion": {
+    "0": 0.47,
+    "1": 0.4,
+    "2": 0.4,
+    "3": 0.4
+  },
+  "gods": [
+    {
+      "id": "docker_desktop",
+      "label": "Docker Desktop",
+      "edges": 10
+    },
+    {
+      "id": "litellm",
+      "label": "LiteLLM model gateway",
+      "edges": 5
+    },
+    {
+      "id": "d_drive",
+      "label": "D: AI and Docker drive",
+      "edges": 5
+    },
+    {
+      "id": "ollama",
+      "label": "Ollama model server",
+      "edges": 4
+    },
+    {
+      "id": "anythingllm",
+      "label": "AnythingLLM workspace",
+      "edges": 4
+    },
+    {
+      "id": "unsloth",
+      "label": "Unsloth training server",
+      "edges": 4
+    },
+    {
+      "id": "windows_client",
+      "label": "Windows clients",
+      "edges": 3
+    },
+    {
+      "id": "open_webui",
+      "label": "Open WebUI chat",
+      "edges": 3
+    },
+    {
+      "id": "n8n",
+      "label": "n8n automation",
+      "edges": 3
+    },
+    {
+      "id": "ollama_models",
+      "label": "Ollama model files",
+      "edges": 2
+    }
+  ],
+  "surprises": [
+    {
+      "source": "Localhost-only boundary",
+      "target": "Docker Desktop",
+      "source_files": [
+        "04-operations-and-safety.md",
+        "02-how-the-services-connect.md"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "implements",
+      "why": "connects across different repos/directories; bridges separate communities; peripheral node `Localhost-only boundary` unexpectedly reaches hub `Docker Desktop`"
+    },
+    {
+      "source": "Post-restart runtime state",
+      "target": "Docker Desktop",
+      "source_files": [
+        "03-current-state-and-gaps.md",
+        "02-how-the-services-connect.md"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "conceptually_related_to",
+      "why": "connects across different repos/directories; bridges separate communities; peripheral node `Post-restart runtime state` unexpectedly reaches hub `Docker Desktop`"
+    },
+    {
+      "source": "AnythingLLM workspace",
+      "target": "Freebuff canonical memory",
+      "source_files": [
+        "02-how-the-services-connect.md",
+        "03-current-state-and-gaps.md"
+      ],
+      "confidence": "AMBIGUOUS",
+      "relation": "conceptually_related_to",
+      "why": "ambiguous connection - not explicitly stated in source; connects across different repos/directories"
+    },
+    {
+      "source": "Unsloth training server",
+      "target": "D: AI and Docker drive",
+      "source_files": [
+        "02-how-the-services-connect.md",
+        "01-what-was-moved.md"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "shares_data_with",
+      "why": "connects across different repos/directories; bridges separate communities"
+    },
+    {
+      "source": "ComfyUI",
+      "target": "D: AI and Docker drive",
+      "source_files": [
+        "03-current-state-and-gaps.md",
+        "01-what-was-moved.md"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "shares_data_with",
+      "why": "connects across different repos/directories; peripheral node `ComfyUI` unexpectedly reaches hub `D: AI and Docker drive`"
+    }
+  ],
+  "questions": [
+    {
+      "type": "ambiguous_edge",
+      "question": "What is the exact relationship between `AnythingLLM workspace` and `Freebuff canonical memory`?",
+      "why": "Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `Docker Desktop` connect `D-Drive Storage` to `Shared AI Services`, `Clients and Interfaces`?",
+      "why": "High betweenness centrality (0.513) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `D: AI and Docker drive` connect `Runtime Gaps` to `Shared AI Services`, `Clients and Interfaces`?",
+      "why": "High betweenness centrality (0.371) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `Unsloth training server` connect `Clients and Interfaces` to `Runtime Gaps`?",
+      "why": "High betweenness centrality (0.335) - this node is a cross-community bridge."
+    },
+    {
+      "type": "verify_inferred",
+      "question": "Are the 2 inferred relationships involving `LiteLLM model gateway` (e.g. with `AnythingLLM workspace` and `n8n automation`) actually correct?",
+      "why": "`LiteLLM model gateway` has 2 INFERRED edges - model-reasoned connections that need verification."
+    },
+    {
+      "type": "verify_inferred",
+      "question": "Are the 2 inferred relationships involving `AnythingLLM workspace` (e.g. with `LiteLLM model gateway` and `ChromaDB vector store`) actually correct?",
+      "why": "`AnythingLLM workspace` has 2 INFERRED edges - model-reasoned connections that need verification."
+    },
+    {
+      "type": "isolated_nodes",
+      "question": "What connects `Docker Compose recipe`, `Dolt versioned SQL`, `llama.cpp native path` to the rest of the system?",
+      "why": "7 weakly-connected nodes found - possible documentation gaps or missing edges."
+    }
+  ]
+}

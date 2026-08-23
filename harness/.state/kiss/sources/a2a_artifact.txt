@@ -1,0 +1,171 @@
+ A2A HANDOFF ARTIFACT
+
+KISS Dashboard ­ MVP Workflow Architecture & Technical Brief
+
+For: DeepSeek + ChatGPT Collaboration
+Prepared by: Kevin Kane
+Date: 2025-10-20
+
+1. Purpose of this Handoff
+
+DeepSeek's role is technical workflow orchestration -- not to code, but to analyze and refine
+how ChatGPT (GPT-5) collaborates with local coding tools and the development environment.
+The goal is to maintain the modular, minimalist, workflow-centric architecture of the KISS
+Dashboard while maximizing automation, clarity, and developer independence.
+
+2. Project Summary
+
+KISS Dashboard is a modular interface system composed of editable cubes ("digital sonar
+pads") that can represent tools, AI agents, or workflows. The MVP's job is to prove that this
+system can exist in a live web environment where:
+
+     A user creates, renames, and rearranges cubes on a grid.
+     Layouts persist to a cloud backend (Firebase).
+     The interface is fully minimalist -- text only, no iconography.
+     An onboarding "AI cube" populates the grid with preset model labels.
+     Layouts can be shared and mirrored on mobile.
+
+3. Conceptual Workflow Machine
+
+Think of the KISS Dashboard as a machine of sections, like a photographic studio layout:
+
+Machine Section                        Purpose                Analog (Photo Studio)
+
+UI Layer                    Cube grid display and user      Lighting setup and
+                            interaction                     composition
+
+State Manager               Keeps live positions and names of Shot list clipboard
+                            cubes
+
+Persistence Layer           Syncs layout to Firebase        Negative storage/archive
+
+Sharing Layer               Generates read-only faceplates  Contact sheet or print proof
+
+Agent Layer (future)        API hooks and AI cubes          Retoucher or assistant
+
+Community Layer             Marketplace and P2P trade       Agency or gallery network
+(future)
+This mental model ensures troubleshooting and scaling can happen "station by station" without
+refactoring the entire system.
+
+4. AI-to-AI Collaboration Goals
+
+DeepSeek should:
+
+1. Oversee the build choreography: ensure each module (UI, state, persistence) has a
+    clearly defined boundary and data contract.
+
+2. Optimize prompt workflows: define how ChatGPT CLI/Codex sessions generate local
+    code safely and iteratively.
+
+3. Enforce the "Machine Sections" discipline: no monoliths; every piece can be
+    inspected or replaced.
+
+4. Validate architectural decisions (framework, security, data model).
+5. Translate creative intent (minimalism, modularity) into engineering heuristics.
+
+ChatGPT's role during build:
+
+ Generate and refactor code locally (Next.js + Firebase).
+ Maintain alignment with this brief and update DeepSeek on progress milestones.
+
+5. Technical Blueprint           Tool         Function
+Stack
+
+        Layer
+
+Frontend          Next.js + React + Tailwind  Grid UI, PWA framework
+
+State             Zustand                     Cube management
+
+Backend           Firebase (Auth, Firestore,  Persistence + Auth
+                  Storage)
+
+Deployment Vercel                             Hosting + previews
+
+AI API (future) OpenAI Responses API          Dynamic cube agents
+
+ Design System Figma minimalist tokens        Typography, spacing, cube
+6. Core Data Flow                             metrics
+
+flowchart LR
+
+User -->|drag/rename| UI[CubeGrid]
+
+UI -->|update state| Store[Zustand]
+Store -->|sync| Firestore[(Firebase)]
+
+Firestore -->|persist| LayoutDB[Faceplates + Cubes]
+
+User -->|share| Link[Share Token]
+
+Link -->|view-only| Viewer
+
+Each cube interaction triggers:
+
+    1. Local update  2. Zustand store update  3. Firestore sync (debounced). This avoids
+         lag while guaranteeing recovery on refresh.
+
+7. AI Integration Pathway (Phase 2)
+
+     The AI Cube acts as a dynamic parent node.
+     Clicking it expands sub-cubes linked to model identifiers (ChatGPT, Claude, Gemini,
+
+         etc.).
+     Each sub-cube can open a context panel that communicates with an OpenAI endpoint.
+     DeepSeek will define prompt templates and data hand-off between these panels and the
+
+         API layer.
+
+8. Workflow-Level Automation
+
+To preserve "Keep It Simple" discipline, all automation will occur through explicit workflow
+steps:
+
+    1. Plan -- ChatGPT summarizes new feature scope and dependencies.
+    2. Scaffold -- Codex or local CLI generates or edits specific files.
+    3. Review -- DeepSeek validates architecture alignment and prompts GPT-5 to self-check
+
+         design.
+    4. Commit -- Changes merged with brief citations in commit notes.
+    5. Test/Run -- Local preview via Vercel dev or Firebase emulator.
+
+DeepSeek ensures these loops remain linear and observable -- no opaque end-to-end
+automation.
+
+9. Governance Principles
+
+     Transparency: Each AI's contribution is logged and reviewable.
+     Human in the loop: Final design and feature approval remain human decisions.
+     Simplicity First: If a feature requires onboarding or documentation, question its
+
+         necessity.
+     Composable Future: Every layer can evolve independently.
+
+10. Immediate Deliverables for DeepSeek
+    1. Validate the file structure and docs in kiss-dashboard-mvp.zip.
+    2. Produce a workflow diagram or checklist for GPT-5 + Codex collaboration (focus:
+
+         local code generation).
+    3. Recommend guardrails for version control and environment separation (dev,
+
+         staging, prod).
+    4. Review the data model for scalability and consistency.
+    5. Return a technical workflow memo summarizing alignment and risk mitigation.
+
+11. Success Definition (for A2A loop)
+
+DeepSeek has successfully fulfilled its advisory role when:
+
+     ChatGPT + Codex can autonomously scaffold and test one vertical slice (grid +
+         persistence).
+
+     The repo structure, data flow, and UX interactions remain human-comprehensible.
+     The machine (sections) can be debugged independently without cross-module failures.
+
+12. Contact Handshake Protocol
+
+     Primary AI: ChatGPT (GPT-5) -- Creative/engineering orchestration
+     Advisory AI: DeepSeek -- Workflow verification and architectural validation
+     Context Anchor: This A2A Handoff Artifact + kiss-dashboard-mvp.zip
+
