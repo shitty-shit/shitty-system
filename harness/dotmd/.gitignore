@@ -1,0 +1,48 @@
+# ────────────────────────────────────────────────────────────
+# Secrets — NEVER commit. Generated keys, passwords, tokens.
+# Committing any of these exposes them publicly the moment
+# the repo is pushed to GitHub. The LiteLLM master admin key
+# and provider API keys all live in these files.
+# ────────────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+litellm-stack/.env
+litellm-stack/.env.*
+
+# ────────────────────────────────────────────────────────────
+# Tool / agent runtime state — auto-managed by IJFW and
+# Codebuff. Re-generated every session; never authored.
+# ────────────────────────────────────────────────────────────
+.freebuff/
+.ijfw/
+
+# ────────────────────────────────────────────────────────────
+# Python build artifacts
+# ────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+
+# ────────────────────────────────────────────────────────────
+# OS junk
+# ────────────────────────────────────────────────────────────
+Thumbs.db
+.DS_Store
+desktop.ini
+ehthumbs.db
+$RECYCLE.BIN/
+
+# ────────────────────────────────────────────────────────────
+# Editor / IDE state
+# ────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/

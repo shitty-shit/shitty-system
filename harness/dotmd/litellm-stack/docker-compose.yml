@@ -1,0 +1,64 @@
+# LiteLLM gateway + PostgreSQL — day one stack.
+#
+#   cp .env.example .env   # then fill in keys
+#   docker compose up -d
+#   open http://localhost:4000/ui   (admin / your LITELLM_MASTER_KEY)
+#
+# Redis (rate-limit-aware load balancing across duplicate keys, redis cache)
+# is NOT in this file. When you register a second key per provider, enable it:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.redis.yml up -d
+#
+# Image: ghcr.io/berriai/litellm is the classic gateway image. The official
+# quickstart also ships docker.litellm.ai/berriai/litellm-database — either
+# works with this compose. For anything long-lived, pin a release tag instead
+# of main-latest.
+
+services:
+  litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    container_name: litellm
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./litellm_config.yaml:/app/config.yaml
+    environment:
+      # Admin UI login: username "admin", password = LITELLM_MASTER_KEY
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY:-sk-1234}
+      # Encrypts provider keys stored in the DB. Set once, never change it.
+      LITELLM_SALT_KEY: ${LITELLM_SALT_KEY:-sk-XXXXXXXXXXXXXXXX}
+      # Postgres powers the Admin UI, virtual keys, and spend tracking.
+      DATABASE_URL: postgresql://litellm:${POSTGRES_PASSWORD:-litellm}@db:5432/litellm
+      # Let models added in the Admin UI persist to Postgres.
+      STORE_MODEL_IN_DB: "True"
+      # Provider keys. Add/remove to taste; they are referenced from
+      # litellm_config.yaml via os.environ/NAME.
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY:-}
+      BYNARA_API_KEY: ${BYNARA_API_KEY:-}
+      BYNARA_API_BASE: ${BYNARA_API_BASE:-}
+    command: ["--config", "/app/config.yaml", "--port", "4000", "--num_workers", "8"]
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:16
+    container_name: litellm-db
+    environment:
+      POSTGRES_USER: litellm
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-litellm}
+      POSTGRES_DB: litellm
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U litellm"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

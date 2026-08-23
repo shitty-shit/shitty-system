@@ -1,0 +1,72 @@
+# LiteLLM proxy config — mounted at /app/config.yaml by docker-compose.yml.
+# Keys are read from environment variables (set in .env), never stored here.
+#
+# Wildcards: model_name "provider/*" accepts ANY model under that provider at
+# request time (e.g. openrouter/anthropic/claude-sonnet-4), so you don't have
+# to enumerate models. Want to pin one? Replace the wildcard entry with:
+#   - model_name: openrouter/anthropic/claude-sonnet-4
+#     litellm_params:
+#       model: openrouter/anthropic/claude-sonnet-4
+#       api_key: os.environ/OPENROUTER_API_KEY
+
+model_list:
+  # OpenRouter — one key, ~500 models, per-model billing.
+  - model_name: openrouter/*
+    litellm_params:
+      model: openrouter/*
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  # Google Gemini (AI Studio or Vertex-style API key).
+  - model_name: gemini/*
+    litellm_params:
+      model: gemini/*
+      api_key: os.environ/GEMINI_API_KEY
+
+  # Alibaba DashScope — qwen-max / qwen-plus / qwen-turbo, cheap Qwen family.
+  - model_name: dashscope/*
+    litellm_params:
+      model: dashscope/*
+      api_key: os.environ/DASHSCOPE_API_KEY
+
+  # bynara — not a stock LiteLLM provider, so treated as any OpenAI-compatible
+  # endpoint. Set BYNARA_API_BASE (e.g. https://api.bynara.example/v1) and
+  # BYNARA_API_KEY in .env. Request it as bynara/<model-name>.
+  - model_name: bynara/*
+    litellm_params:
+      model: openai/*
+      api_base: os.environ/BYNARA_API_BASE
+      api_key: os.environ/BYNARA_API_KEY
+
+litellm_settings:
+  drop_params: true        # strip params a provider doesn't accept (handy across mixed providers)
+  num_retries: 3
+  request_timeout: 600
+  # Day one: in-memory cache. IMPORTANT: as of recent LiteLLM versions, plain
+  # `cache: true` defaults to a REDIS cache and crashes at startup without
+  # Redis — the explicit `type: local` below is what keeps day one Redis-free.
+  cache: true
+  cache_params:
+    type: local
+
+  # --- Day two: switch caching to Redis (with docker-compose.redis.yml up) ---
+  # DELETE the `cache_params:` block above. The Redis overlay sets
+  # REDIS_HOST/REDIS_PORT/REDIS_PASSWORD, which LiteLLM auto-detects for the
+  # redis cache type. Then restart litellm.
+
+router_settings:
+  # Route to the key that has used the least tokens — this is what "burn down
+  # stranded balances deliberately" means mechanically. usage-based-routing
+  # works in-memory, no Redis needed (day one).
+  routing_strategy: usage-based-routing
+  cooldown_time: 30
+  allowed_fails: 3
+  num_retries: 3
+
+  # --- Day two: with docker-compose.redis.yml active, upgrade to the
+  # Redis-backed strategy so usage is tracked across duplicate keys of the
+  # same provider. NOTE: usage-based-routing-v2 REQUIRES Redis — LiteLLM will
+  # crash on startup without it.
+  # routing_strategy: usage-based-routing-v2
+
+# general_settings:
+#   store_prompts_in_spend_log: true   # keeps full prompt text in spend logs (good for receipts, sensitive by nature)

@@ -1,0 +1,42 @@
+# Day-two overlay: adds Redis for rate-limit-aware load balancing across
+# duplicate keys per provider, plus a Redis response-cache backend.
+#
+# Enable it only when you need it (Kevin's rule: day one without it):
+#   docker compose -f docker-compose.yml -f docker-compose.redis.yml up -d
+#
+# Overlay merge rules: environment keys are added on top of the base file,
+# and the extra depends_on makes litellm wait for a healthy Redis.
+
+services:
+  litellm:
+    environment:
+      # Enabling these tells the LiteLLM router to keep cooldowns, usage, and
+      # rate-limit state in Redis instead of per-process memory. That is what
+      # makes usage-based routing across N keys for one provider actually work.
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-litellmredis}
+      # Redis-backed response caching (config.yaml cache block is commented
+      # out until you flip this on — see litellm_config.yaml).
+      LITELLM_REDIS_URL: redis://:${REDIS_PASSWORD:-litellmredis}@redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  redis:
+    image: redis:7-alpine
+    container_name: litellm-redis
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:-litellmredis}"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a ${REDIS_PASSWORD:-litellmredis} ping | grep PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    # No host port mapping: Redis is internal to this stack. If you want to
+    # poke it with redis-cli from the host, add  - "6379:6379"  below.
+
+volumes:
+  redis_data:

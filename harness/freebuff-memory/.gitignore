@@ -1,0 +1,18 @@
+# IJFW generated/runtime state
+.ijfw/
+
+# Session telemetry and transient dumps
+ijfw/sessions/
+ijfw/dump/inbox/*
+ijfw/dump/processed/*
+
+# Keep directory placeholders
+!ijfw/dump/inbox/.gitkeep
+!ijfw/dump/processed/.gitkeep
+
+# Local noise
+__pycache__/
+*.py[cod]
+*.tmp
+*.lock
+*.log
